@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Ruff
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb~
+
+# Data — raw files are immutable and stored in S3/DVC, not git
+data/raw/
+data/interim/
+data/processed/
+
+# External shapefiles and lookup tables can be large — add individually if small
+# data/external/
+
+# ML artefacts
+mlruns/
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+models/weights/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
