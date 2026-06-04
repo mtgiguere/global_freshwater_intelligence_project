@@ -386,3 +386,78 @@ None of these were caught by the tests. They were caught by CI or by a human rev
 *Its purpose is to prevent future sessions from repeating the same patterns.*
 *The evidence in it is real. The bugs were real. The fixes were real.*
 *Do the work in the right order.*
+
+---
+
+## What We Learned: Batch TDD vs Strict TDD
+
+This section documents a deliberate experiment run during GFIP Phase 1 development.
+The same module (AQUASTAT ingest) was written twice: once with batch TDD ("tests-first
+design") and once with strict TDD (one test, RED, minimum code, GREEN, repeat).
+
+### The experiment
+
+**Batch approach:** All 17 tests written at once. RED confirmed once as a batch (ImportError).
+Full implementation written at once. GREEN confirmed.
+
+**Strict TDD:** One test at a time. RED confirmed individually. Minimum code to pass that
+one test. GREEN confirmed. Next test.
+
+### What changed
+
+| | Batch | Strict TDD |
+|---|---|---|
+| Public functions | 5 | 1 |
+| Lines of implementation | 52 | 27 |
+| Tests | 17 | 8 |
+| Branch coverage | 99% | 100% |
+
+### Why the designs diverged
+
+**1. Starting from consumer behavior collapses the API.**
+
+Batch approach started from "what functions do I need?" and produced 5 public functions:
+`parse_raw_csv`, `filter_variables`, `pivot_to_wide`, `map_country_codes`, `validate_schema`.
+
+Strict TDD started from "what does the consumer want?" and produced 1 public function:
+`load_aquastat`. The internal steps became private implementation details.
+
+The consumer cannot call the pipeline steps in the wrong order. They cannot forget to call
+`validate_schema`. The function guarantees its output is valid. The batch API could not.
+
+**2. Error handling location is driven by the test, not by habit.**
+
+Batch approach: `map_country_codes` returned NaN silently. `validate_schema` caught it
+downstream. Two public functions the consumer had to remember to chain.
+
+Strict TDD: The test said "load_aquastat raises if any country cannot be mapped." So the
+check lives inside `load_aquastat`. Fail-fast, co-located with the failure, impossible to skip.
+
+**3. Some planned functions never needed to exist.**
+
+`validate_schema` was a public function in the batch approach because it was planned upfront.
+No test ever demanded it as a public function. Strict TDD never created it.
+
+**4. One test was immediately GREEN — and that is information.**
+
+The year-is-integer test passed without any code change. In the batch approach this could not
+be known, so a defensive cast was written anyway. Strict TDD revealed the cast was unnecessary.
+When a test you write is immediately GREEN, the behavior was already guaranteed. This is not
+a failure of TDD — it is TDD giving you information about your implementation.
+
+**5. Fewer tests, but higher quality.**
+
+17 tests → 8 tests. The batch approach tested each internal function separately. When those
+functions are private, those tests verify implementation mechanics, not behavior. The 8 strict
+TDD tests each verify one consumer-visible behavior. All 8 drove a code change or confirmed
+a behavioral guarantee.
+
+### The lesson
+
+> "Tests-first design" produces the design you planned.
+> Strict TDD produces the design the behavior demands.
+>
+> They are not the same design. The strict TDD design is simpler, better encapsulated,
+> and has fewer failure modes — not because the developer was smarter, but because
+> each test forced the question: "what is the minimum interface that satisfies this
+> one behavior?" The answer is always simpler than what you planned.
