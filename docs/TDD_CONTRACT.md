@@ -389,6 +389,73 @@ None of these were caught by the tests. They were caught by CI or by a human rev
 
 ---
 
+## Just-In-Time Programming — The Other Half of the Discipline
+
+TDD tells you *how* to build. Just-In-Time (JIT) programming tells you *what* to build
+and *when*. Together they are the same discipline from two angles.
+
+**The JIT rule:**
+
+> Write only the code that a currently failing test demands.
+> Do not write code for needs that do not yet exist.
+
+This sounds obvious. It is not practiced. Here is what violating it looks like:
+
+```python
+# VIOLATION: writing a helper "because it might be useful later"
+def filter_variables(df, variables):   # no test demands this as a public function
+    ...                                # it exists because I imagined a future caller
+
+def validate_schema(df):               # same — planned upfront, not test-driven
+    ...
+```
+
+Both functions were written during the GFIP AQUASTAT batch approach because the
+developer anticipated they would be needed. No test demanded them as public functions.
+The strict TDD pass eliminated both — not because they were wrong, but because they
+were *premature*.
+
+**The tell:**
+
+If you are about to write a function and you cannot point to a currently failing test
+that demands it — stop. The function does not belong yet.
+
+When the need arrives, a test will fail. That failing test is your permission to write
+the function. Not before.
+
+**Why this matters:**
+
+Every speculative public function is API surface that has to be maintained, tested,
+documented, and kept consistent with the rest of the codebase. Speculative functions
+that never get called are pure cost. Speculative functions that *do* get called but
+were designed for an imagined use case often get called *wrong*.
+
+JIT is not laziness. It is the discipline of trusting that the tests will tell you
+what to build, in the order you need to build it.
+
+**The connection to TDD:**
+
+TDD enforces JIT automatically. You cannot write speculative code and have it be tested,
+because the test is supposed to come first. If you find yourself writing code before the
+test, you are violating both TDD and JIT simultaneously.
+
+The sequence "write test → write minimum code → repeat" *is* just-in-time programming.
+The "minimum code" step is JIT: not one line more than the failing test requires.
+
+**A RED FLAG specific to JIT violations:**
+
+```python
+# RED FLAG 7: Function with no failing test demanding it
+def _compute_auxiliary_stats(df):   # who called this? what test failed without it?
+    ...
+
+# RED FLAG 8: Public function that is only called by one private function
+def parse_raw_csv(path):            # if only load_aquastat() calls this, it should
+    ...                             # be private or inlined — no external test demands it
+```
+
+---
+
 ## What We Learned: Batch TDD vs Strict TDD
 
 This section documents a deliberate experiment run during GFIP Phase 1 development.
