@@ -319,6 +319,56 @@ def test_ifs_always_in_0_1(cci, ili):
 
 Hypothesis will find the edge cases you didn't think of.
 
+### Property Tests Emerge Naturally From Strict TDD
+
+You do not always need Hypothesis to write a property test. When you ask
+"what must be true about this output regardless of the specific input?" — you are
+already thinking in properties. Strict TDD surfaces this naturally.
+
+During GFIP Phase 1 GRACE ingest development, the spatial aggregation test was written as:
+
+```python
+def test_load_grace_area_weighted_mean_of_constant_equals_that_constant():
+    """Property: area-weighted mean of a spatially uniform field must equal the field value.
+    This holds regardless of country shape or latitude.
+    """
+    for value in [-3.5, 0.0, 2.8]:
+        ds = _make_dataset(value=value)
+        result = load_grace(ds, shapes)
+        assert abs(result.iloc[0]["grace_lwe_anomaly_cm"] - value) < 1e-6
+```
+
+This test was not designed. It emerged from asking "what must always be true about
+area-weighted mean?" — the answer is: a uniform field must return the field value.
+That property is independent of grid resolution, country shape, or latitude.
+
+If the cos(lat) weights were wrong, this test would catch it for any input value.
+A seed-based test (`assert result == 1.847...`) would only catch it for that one case.
+
+**The pattern:** When testing mathematical or spatial functions, ask:
+- What invariant must hold for all valid inputs?
+- What relationship must be preserved regardless of the specific values?
+- What property would be violated if my algorithm is wrong?
+
+That question — not the specific expected output — is the test. It is more powerful
+than any hand-calculated expected value, and it emerges naturally from strict TDD
+because strict TDD forces you to think about behavior before implementation.
+
+### When a Test Is Immediately GREEN — That Is Also Information
+
+During GFIP Phase 1 development, two tests passed without driving any code change:
+- Year column is integer dtype (pivot preserves int64 automatically)
+- Tiny country with no grid cells gets NaN (weighted mean of empty mask = NaN naturally)
+
+When a test you write is immediately GREEN, it means one of two things:
+1. The behavior was already guaranteed by your implementation choice — the test
+   is still valuable as a regression guard, confirming the guarantee is real.
+2. The test is redundant — it confirms something another test already covers.
+
+In strict TDD, an immediately GREEN test is not a failure. It is the process telling
+you something about your implementation that you could not have known without running
+it. Write the test. See GREEN. Note the reason. Move on.
+
 ---
 
 ## The Conversation You Will Have
