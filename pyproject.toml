@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Global Freshwater Intelligence Project"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pycountry>=24.6",
+]
 
 [dependency-groups]
 dev = [
