@@ -1,0 +1,23 @@
+Package: gfip.analysis
+Title: GFIP Phase 3 Hypothesis Testing
+Version: 0.1.0
+Authors@R: person("Matt", "Giguere", role = c("aut", "cre"))
+Description: Panel regression and causal inference for GFIP hypotheses H1-H7.
+License: MIT
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.0.0
+Imports:
+    fixest,
+    tidyverse,
+    modelsummary,
+    sandwich,
+    lmtest,
+    AER,
+    broom,
+    here,
+    arrow
+Suggests:
+    testthat (>= 3.0.0),
+    lintr
+Config/testthat/edition: 3
