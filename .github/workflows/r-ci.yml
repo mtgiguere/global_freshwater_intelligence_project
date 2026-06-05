@@ -12,10 +12,6 @@ on:
       - "analysis/**"
       - ".github/workflows/r-ci.yml"
 
-# renv.lock is not committed until the full Phase 3 package set is installed.
-# setup-r-dependencies reads from analysis/DESCRIPTION directly via pak.
-# Once renv.lock is committed: remove extra-packages, swap to setup-renv@v2.
-
 jobs:
   lint:
     name: Lint (lintr)
@@ -33,9 +29,6 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: |
-            any::lintr
-            any::devtools
           needs: check
 
       - name: Lint
@@ -57,10 +50,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: |
-            any::devtools
-            any::testthat
           needs: check
 
       - name: Run tests
-        run: Rscript -e "devtools::test()"
+        run: Rscript -e "source('tests/testthat.R')"

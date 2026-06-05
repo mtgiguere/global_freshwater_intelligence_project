@@ -1,4 +1,3 @@
 library(testthat)
-library(gfip.analysis)
 
-test_check("gfip.analysis")
+test_dir("tests/testthat")
