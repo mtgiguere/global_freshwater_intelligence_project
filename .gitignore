@@ -56,6 +56,21 @@ models/weights/
 *.swp
 *.swo
 
+# R
+# renv.lock and .Rprofile are excluded until the full Phase 3 package set is
+# installed locally. To commit: run renv::install() + renv::snapshot() from
+# analysis/, then remove both entries from this gitignore block and commit.
+analysis/renv.lock
+analysis/.Rprofile
+analysis/renv/library/
+analysis/renv/staging/
+analysis/renv/sandbox/
+.Rhistory
+.RData
+.Rdata
+.httr-oauth
+*.Rproj.user/
+
 # OS
 .DS_Store
 Thumbs.db
