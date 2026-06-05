@@ -27,7 +27,15 @@ jobs:
           r-version: "4.4"
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-renv@v2
+      # Reads from analysis/DESCRIPTION — no renv.lock required yet.
+      # Once R is installed locally, run renv::init() + renv::snapshot()
+      # and commit renv.lock to switch to fully locked reproducible installs.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: analysis
+          extra-packages: |
+            any::lintr
+            any::devtools
 
       - name: Lint
         run: Rscript -e "lintr::lint_package(); quit(status = length(lintr::lint_package()) > 0)"
@@ -46,7 +54,12 @@ jobs:
           r-version: "4.4"
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-renv@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: analysis
+          extra-packages: |
+            any::devtools
+            any::testthat
 
       - name: Run tests
         run: Rscript -e "devtools::test()"
