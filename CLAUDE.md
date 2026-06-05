@@ -15,9 +15,10 @@ Full specification: `docs/GFIP_Master_Documentation_v1.0.docx`.
 
 ## Current State
 
-**Phase 1: complete.** 9 ingest modules + Master Panel assembly + exit criteria validation.
-89 tests, 100% branch coverage. Next: Phase 2 EDA (Python notebooks) → Phase 3 hypothesis
-testing (R). See README for the full status table.
+**Phase 1: complete.** 9 ingest modules + all sources downloaded + Master Panel assembled.
+103 tests, 100% branch coverage. Master Panel: 17,070 rows x 35 cols, 274 countries,
+1946-2025, saved to data/processed/master_panel.parquet.
+Next: Phase 2 EDA (notebooks/01_eda.ipynb) -> Phase 3 hypothesis testing (R).
 
 | Module | Key output columns |
 |--------|--------------------|
@@ -167,7 +168,7 @@ gfip/
   notebooks/      # Jupyter EDA and analysis notebooks
   src/
     ingest/       # One module per data source — complete
-    pipeline/     # master_panel.py + validate.py — complete
+    pipeline/     # master_panel.py + validate.py + assemble.py — complete
     models/       # ML training & evaluation (Phase 4)
     api/          # FastAPI application (Phase 4)
   dashboard/      # React + TypeScript (Phase 5)

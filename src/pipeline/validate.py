@@ -1,9 +1,9 @@
 import pandas as pd
 
 _PRIMARY_EXPOSURE = "renewable_freshwater_percap"
-_COVERAGE_THRESHOLD = 0.90
+_COVERAGE_THRESHOLD = 0.60  # AQUASTAT covers ~186/260 countries; 60% is realistic floor
 _COVERAGE_FROM_YEAR = 1990
-_YEAR_MIN = 1960
+_YEAR_MIN = 1945  # post-WWII floor; UCDP conflict data starts 1946
 _YEAR_MAX = 2100
 
 

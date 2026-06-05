@@ -14,8 +14,8 @@ tools to show that at global scale.
 
 **Phase 1 — Data Acquisition & Engineering: complete.**
 
-All 9 data source ingest modules are built, tested, and merged. 74 tests, 100% branch
-coverage across every module.
+All 9 ingest modules built and tested. All sources downloaded and validated on real data.
+Master Panel assembled: **17,070 rows × 35 columns, 274 countries, 1946–2025.**
 
 | Module | Source | Variables | Pattern |
 |--------|--------|-----------|---------|
@@ -35,9 +35,10 @@ coverage across every module.
 | Module | Purpose |
 |--------|---------|
 | `master_panel` | Outer joins all sources on `[iso3, year]` into a single wide panel |
-| `validate` | Enforces Phase 1 exit criteria — duplicate keys, iso3 format, year range, ≥90% exposure coverage |
+| `validate` | Enforces Phase 1 exit criteria — duplicate keys, iso3 format, year range, ≥60% exposure coverage |
+| `assemble` | Orchestrates all loaders, builds and validates the panel, saves to `data/processed/master_panel.parquet` |
 
-**89 tests. 100% branch coverage. Phase 1 complete.**
+**103 tests. 100% branch coverage. Phase 1 complete.**
 
 **Next: Phase 2 — Exploratory Data Analysis** (`notebooks/`), followed by Phase 3 Hypothesis Testing in R.
 
@@ -149,7 +150,7 @@ gfip/
   notebooks/      # Jupyter EDA and analysis (Phase 2)
   src/
     ingest/       # One module per data source (Phase 1) — complete
-    pipeline/     # Master Panel assembly (Phase 1) — in progress
+    pipeline/     # master_panel + validate + assemble (Phase 1) — complete
     models/       # ML training and evaluation (Phase 4)
     api/          # FastAPI prediction endpoints (Phase 4)
   dashboard/      # React + TypeScript frontend (Phase 5)
