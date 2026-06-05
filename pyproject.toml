@@ -84,6 +84,7 @@ omit = [
     "src/ingest/download/grace.py",
     "src/ingest/download/undesa.py",
     "src/ingest/download/unhcr.py",
+    "src/ingest/download/ucdp.py",
     "src/ingest/download/unodc.py",
     "src/ingest/download/who.py",
 ]
