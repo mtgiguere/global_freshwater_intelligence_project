@@ -15,8 +15,9 @@ Full specification: `docs/GFIP_Master_Documentation_v1.0.docx`.
 
 ## Current State
 
-**Phase 1 ingest: complete.** All 9 source modules are in `src/ingest/`, tested, and merged.
-74 tests, 100% branch coverage. The next task is Master Panel assembly in `src/pipeline/`.
+**Phase 1: complete.** 9 ingest modules + Master Panel assembly + exit criteria validation.
+89 tests, 100% branch coverage. Next: Phase 2 EDA (Python notebooks) → Phase 3 hypothesis
+testing (R). See README for the full status table.
 
 | Module | Key output columns |
 |--------|--------------------|
@@ -166,7 +167,7 @@ gfip/
   notebooks/      # Jupyter EDA and analysis notebooks
   src/
     ingest/       # One module per data source — complete
-    pipeline/     # Master Panel assembly — next
+    pipeline/     # master_panel.py + validate.py — complete
     models/       # ML training & evaluation (Phase 4)
     api/          # FastAPI application (Phase 4)
   dashboard/      # React + TypeScript (Phase 5)

@@ -30,8 +30,16 @@ coverage across every module.
 | `unhcr` | UNHCR / IOM | `refugee_outflow`, `idp_count`, `asylum_applications_origin` | Country-year CSV → rename |
 | `undesa` | UN DESA | `population`, `population_urban`, `population_rural` | Country-year CSV → rename + ×1000 |
 
-**Next: Phase 1 Master Panel assembly** — `src/pipeline/` joins all 9 sources on
-`[iso3, year]` into a single validated country-year panel.
+**Pipeline (`src/pipeline/`):**
+
+| Module | Purpose |
+|--------|---------|
+| `master_panel` | Outer joins all sources on `[iso3, year]` into a single wide panel |
+| `validate` | Enforces Phase 1 exit criteria — duplicate keys, iso3 format, year range, ≥90% exposure coverage |
+
+**89 tests. 100% branch coverage. Phase 1 complete.**
+
+**Next: Phase 2 — Exploratory Data Analysis** (`notebooks/`), followed by Phase 3 Hypothesis Testing in R.
 
 ---
 
@@ -52,9 +60,9 @@ coverage across every module.
 ## Project Phases
 
 ```
-Phase 1  →  Data Acquisition & Engineering  →  Master Panel (country-year)   ✓ ingest complete
-Phase 2  →  Exploratory Data Analysis
-Phase 3  →  Hypothesis Testing (H1–H7, panel regression + causal inference)
+Phase 1  →  Data Acquisition & Engineering  →  Master Panel (country-year)   ✓ COMPLETE
+Phase 2  →  Exploratory Data Analysis                                         ← next
+Phase 3  →  Hypothesis Testing (H1–H7, panel regression + causal inference)  [R]
 Phase 4  →  ML Modelling (scarcity forecast, instability risk, migration pressure)
 Phase 5  →  Interactive Dashboard (global-to-regional, public-facing)
 ```
