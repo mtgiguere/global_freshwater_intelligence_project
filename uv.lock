@@ -730,6 +730,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pycountry" },
     { name = "regionmask" },
+    { name = "requests" },
     { name = "shapely" },
     { name = "xarray" },
 ]
@@ -756,6 +757,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2" },
     { name = "pycountry", specifier = ">=24.6" },
     { name = "regionmask", specifier = ">=0.12" },
+    { name = "requests", specifier = ">=2.32" },
     { name = "shapely", specifier = ">=2.0" },
     { name = "xarray", specifier = ">=2024.1" },
 ]
