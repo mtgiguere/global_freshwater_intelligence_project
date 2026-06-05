@@ -12,11 +12,9 @@ on:
       - "analysis/**"
       - ".github/workflows/r-ci.yml"
 
-# Disable renv autoload so setup-r-dependencies can use pak freely.
-# Once renv.lock contains the full package set, switch both jobs to
-# setup-renv@v2 and remove this env block.
-env:
-  RENV_CONFIG_AUTOLOAD_ENABLED: FALSE
+# renv.lock is not committed until the full Phase 3 package set is installed.
+# setup-r-dependencies reads from analysis/DESCRIPTION directly via pak.
+# Once renv.lock is committed: remove extra-packages, swap to setup-renv@v2.
 
 jobs:
   lint:
@@ -35,10 +33,10 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          working-directory: analysis
           extra-packages: |
             any::lintr
             any::devtools
+          needs: check
 
       - name: Lint
         run: Rscript -e "lintr::lint_package(); quit(status = length(lintr::lint_package()) > 0)"
@@ -59,10 +57,10 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          working-directory: analysis
           extra-packages: |
             any::devtools
             any::testthat
+          needs: check
 
       - name: Run tests
         run: Rscript -e "devtools::test()"

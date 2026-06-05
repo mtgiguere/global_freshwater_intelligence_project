@@ -57,6 +57,10 @@ models/weights/
 *.swo
 
 # R
+# renv.lock is excluded until the full Phase 3 package set is installed locally.
+# To commit: run renv::install() + renv::snapshot() from analysis/, then
+# remove analysis/renv.lock from this gitignore and commit the file.
+analysis/renv.lock
 analysis/renv/library/
 analysis/renv/staging/
 analysis/renv/sandbox/
