@@ -12,6 +12,12 @@ on:
       - "analysis/**"
       - ".github/workflows/r-ci.yml"
 
+# Disable renv autoload so setup-r-dependencies can use pak freely.
+# Once renv.lock contains the full package set, switch both jobs to
+# setup-renv@v2 and remove this env block.
+env:
+  RENV_CONFIG_AUTOLOAD_ENABLED: FALSE
+
 jobs:
   lint:
     name: Lint (lintr)
@@ -27,9 +33,6 @@ jobs:
           r-version: "4.4"
           use-public-rspm: true
 
-      # Reads from analysis/DESCRIPTION — no renv.lock required yet.
-      # Once R is installed locally, run renv::init() + renv::snapshot()
-      # and commit renv.lock to switch to fully locked reproducible installs.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           working-directory: analysis
