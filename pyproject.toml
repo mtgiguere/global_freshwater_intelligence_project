@@ -76,6 +76,7 @@ branch = true
 omit = [
     # Download scripts are CLI tools that make real HTTP calls — not unit-testable
     "src/ingest/download/worldbank.py",
+    "src/ingest/download/aquastat.py",
 ]
 
 [tool.coverage.report]
