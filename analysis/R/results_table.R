@@ -41,12 +41,15 @@ build_results_table <- function(panel, output_path = NULL) {
 
   tbl <- modelsummary(
     models,
-    coef_map    = coef_map,
-    gof_map     = gof_map,
-    stars       = c("*" = 0.1, "**" = 0.05, "***" = 0.01),
-    title       = "GFIP Phase 3: Two-Way Fixed Effects Results (Country + Year FE, Clustered SE)",
-    notes       = "All models include country and year fixed effects. Standard errors clustered by country.",
-    output      = if (is.null(output_path)) "markdown" else output_path
+    coef_map = coef_map,
+    gof_map  = gof_map,
+    stars    = c("*" = 0.1, "**" = 0.05, "***" = 0.01),
+    title    = "GFIP Phase 3: Two-Way FE Results (Country + Year FE, Clustered SE)",
+    notes    = paste(
+      "All models include country and year fixed effects.",
+      "Standard errors clustered by country."
+    ),
+    output   = if (is.null(output_path)) "markdown" else output_path
   )
 
   tbl
