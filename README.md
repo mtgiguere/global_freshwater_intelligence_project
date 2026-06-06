@@ -148,6 +148,44 @@ Every pull request must pass all three before merge:
 
 ---
 
+## Deploy
+
+The project is configured for **Render** (API) + **Vercel** (frontend).
+Both platforms connect directly to the GitHub repository.
+
+### API → Render
+
+1. Go to [render.com](https://render.com) → New → Blueprint
+2. Connect your GitHub repo — Render will find `render.yaml` automatically
+3. Click **Apply** — the `gfip-api` service is created and deployed
+4. Copy the service URL (e.g. `https://gfip-api.onrender.com`)
+5. In Render → Environment, set `ALLOWED_ORIGINS` to your Vercel URL (see below)
+
+The API works immediately with synthetic fallback data (`is_trained=false`).
+To serve real predictions, run `uv run python src/models/train_all.py` locally
+and upload the `data/models/` directory to Render's persistent disk, or
+re-train on the server after attaching a disk.
+
+### Frontend → Vercel
+
+1. Go to [vercel.com](https://vercel.com) → Add New Project → Import your repo
+2. Set **Root Directory** to `dashboard`
+3. Framework preset: **Vite** (auto-detected)
+4. Add environment variable: `VITE_API_URL` = your Render service URL
+5. Click **Deploy**
+
+The `dashboard/vercel.json` handles SPA routing so deep links don't 404.
+
+### CORS
+
+Once both are deployed, set `ALLOWED_ORIGINS` on Render to your Vercel URL:
+
+```
+ALLOWED_ORIGINS=https://your-project.vercel.app
+```
+
+---
+
 ## Stack
 
 | Layer | Technology |
