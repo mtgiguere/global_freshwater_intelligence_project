@@ -9,6 +9,7 @@ Run locally:
 """
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -32,9 +33,15 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# ALLOWED_ORIGINS env var controls CORS in production.
+# Set it on Render to your Vercel URL, e.g. "https://gfip.vercel.app"
+# Multiple origins: comma-separated, e.g. "https://gfip.vercel.app,http://localhost:5173"
+# Defaults to "*" for local development and CI.
+_ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tightened in production
+    allow_origins=_ALLOWED_ORIGINS,
     allow_methods=["GET"],
     allow_headers=["*"],
 )

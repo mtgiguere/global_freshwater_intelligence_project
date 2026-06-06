@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: gfip-api
+    runtime: python
+    region: oregon
+    plan: free
+
+    # uv is the project's package manager — install it first, then sync deps.
+    # The --no-dev flag skips test/notebook tools (pytest, jupyter, etc.)
+    # that are not needed at runtime and would bloat the build.
+    buildCommand: pip install uv && uv sync --no-dev
+
+    startCommand: uv run uvicorn src.api.main:app --host 0.0.0.0 --port $PORT
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+
+      # Set this to your Vercel frontend URL once deployed, e.g.:
+      #   https://gfip.vercel.app
+      # Multiple origins: comma-separated.
+      # Remove or set to "*" to allow all origins (fine for a public read-only API).
+      - key: ALLOWED_ORIGINS
+        value: "*"
+
+    # Health check — Render uses this to determine when the service is ready
+    # and to restart it if it becomes unresponsive.
+    healthCheckPath: /health
