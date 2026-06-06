@@ -71,6 +71,68 @@ JIT section in `docs/TDD_CONTRACT.md`.
 If a test assertion is inside an `if` block, it is hollow. Design fixtures so the
 assertion always runs. See TDD contract §Bug #5.
 
+### 5. Pre-Commit Checklist — Run These Before Every Commit
+
+CI catching linter errors is a failure of process, not just a minor inconvenience.
+Run these locally first:
+
+```bash
+# Python
+uv run ruff check .
+uv run pytest --no-header -q
+
+# R (when analysis/ files changed)
+cd analysis
+Rscript --vanilla -e ".libPaths(c(Sys.getenv('R_LIBS_USER'), .libPaths())); lintr::lint_package()"
+```
+
+If any fails, fix it before committing. Pushing a known-failing commit wastes CI
+minutes and clutters the PR with fix commits.
+
+### 6. Coverage Omit — CLI Scripts Are Not Library Code
+
+Every file in `src/ingest/download/` and `src/pipeline/` that is a CLI script
+(has `if __name__ == "__main__":`) must be added to the `omit` list in
+`pyproject.toml` at the time it is created — not after CI fails.
+
+The pattern to follow:
+
+```toml
+[tool.coverage.run]
+omit = [
+    "src/ingest/download/new_script.py",  # add immediately when creating
+]
+```
+
+### 7. Comments Are for Every Reader, Not Just Developers
+
+This project is intentionally public and intended to be understood by policymakers,
+researchers, journalists, and anyone who cares about freshwater and human welfare —
+not only software engineers.
+
+**Long, explanatory comments are a feature, not a violation.**
+
+When writing code that implements scientific methodology — hypothesis tests, model
+specifications, data transformations — write comments that explain the WHY in plain
+language. Include the scientific reasoning, the expected sign, the limitation, the
+alternative approach considered.
+
+Example of the right approach (from test_h7_groundwater.R):
+```r
+# The correct test: controlling for baseline income, do countries with faster
+# aquifer depletion achieve lower SUBSEQUENT economic performance?
+# This is a conditional growth regression (convergence framework):
+#   log(GDP_2020) ~ grace_depletion_rate + log(GDP_2005) + error
+# The sign on grace_depletion_rate should be NEGATIVE:
+# faster depletion -> lower GDP in 2020 than we would predict from 2005 baseline.
+```
+
+This is NOT over-commenting. This is open science.
+
+The linters `commented_code_linter` (R) are disabled in `.lintr` precisely because
+they would remove this kind of explanation. If a linter fights the project's purpose,
+configure the linter — not the comments.
+
 ## Established Ingest Conventions
 
 All Phase 1 ingest modules follow the same public API and internal patterns.

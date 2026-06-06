@@ -247,6 +247,61 @@ in tests before the code is written?**
 
 The RED step is not optional. If you skip it, you are doing TAD.
 
+### Pre-Commit — Run the Linters Locally First
+
+CI catching a linter error is not a minor inconvenience. It means you pushed
+broken code, wasted pipeline minutes, and added a noise commit ("fix lint") to
+the history. The fix is simple: run the linters before committing, not after.
+
+```bash
+# Before every commit — Python
+uv run ruff check .
+uv run pytest --no-header -q
+
+# Before every commit — R (when analysis/ files changed)
+Rscript --vanilla -e "lintr::lint_package()"
+```
+
+If any of these fail, do not commit. Fix the issue first.
+
+### Comments Are for Every Reader — Not Just Developers
+
+This project is deliberately public. Its audience is not only software engineers.
+It includes policymakers, researchers, journalists, students, and anyone who cares
+about freshwater and human welfare. The code should be legible to a motivated
+non-developer who is willing to read carefully.
+
+**This means: long, explanatory comments are a feature, not a code smell.**
+
+When implementing scientific methodology — a hypothesis test, a model specification,
+a data transformation decision — write a comment that explains:
+- What the code is doing in plain language
+- WHY this approach was chosen
+- What the expected result means
+- What the limitation is
+- What alternative was considered and rejected
+
+```r
+# H7 requires a fundamentally different empirical approach from H1-H6.
+# The mechanism operates over 10-30 year horizons:
+#   - Countries deplete aquifers today for agriculture
+#   - 10-20 years later, groundwater runs out
+#   - Agriculture collapses, food prices rise, instability follows
+#
+# The correct test: controlling for baseline income, do countries with faster
+# aquifer depletion achieve lower SUBSEQUENT economic performance?
+```
+
+This is not over-commenting. This is open science. A UN analyst, a journalist,
+or a student should be able to read this and understand what we are testing and why.
+
+**Linters that fight this goal should be configured away — not obeyed.**
+
+`commented_code_linter` (R) is disabled in `.lintr` because it would flag
+methodological commentary as violations. The linter serves the project, not the
+other way around. When a lint rule conflicts with the project's purpose, disable
+the rule and document why.
+
 ### Red Flag Signals — Stop and Fix Before Proceeding
 
 If you find yourself writing any of the following, you are not doing TDD:
