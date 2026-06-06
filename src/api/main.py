@@ -150,9 +150,12 @@ def global_risk() -> list[CountryRisk]:
     panel = _load_panel()
     if panel is None:
         return [
-            CountryRisk(iso3="AFG", country_name="Afghanistan", year=2023, compound_risk_score=72.4),
-            CountryRisk(iso3="FRA", country_name="France",      year=2023, compound_risk_score=18.1),
-            CountryRisk(iso3="IND", country_name="India",       year=2023, compound_risk_score=55.3),
+            CountryRisk(iso3="AFG", country_name="Afghanistan", year=2023,
+                        compound_risk_score=72.4),
+            CountryRisk(iso3="FRA", country_name="France", year=2023,
+                        compound_risk_score=18.1),
+            CountryRisk(iso3="IND", country_name="India", year=2023,
+                        compound_risk_score=55.3),
         ]
 
     latest_year = int(panel["year"].max())
@@ -222,7 +225,11 @@ def country_detail(iso3: str) -> CountryDetail:
                 ucdp_conflict_binary=_safe_int(row.get("ucdp_conflict_binary")),
             )
         )
-    return CountryDetail(iso3=iso3.upper(), country_name=_country_name(iso3.upper()), timeseries=timeseries)
+    return CountryDetail(
+        iso3=iso3.upper(),
+        country_name=_country_name(iso3.upper()),
+        timeseries=timeseries,
+    )
 
 
 @app.get("/api/v1/hypotheses", response_model=list[HypothesisResult])
