@@ -17,6 +17,11 @@ dependencies = [
     "regionmask>=0.12",
     "shapely>=2.0",
     "xarray>=2024.1",
+    # Phase 4 — ML
+    "mlflow>=2.14",
+    "scikit-learn>=1.5",
+    "shap>=0.46",
+    "xgboost>=2.1",
 ]
 
 [dependency-groups]
