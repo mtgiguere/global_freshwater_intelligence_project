@@ -15,6 +15,7 @@ class HealthResponse(BaseModel):
 
 class CountryRisk(BaseModel):
     iso3: str = Field(..., description="ISO 3166-1 alpha-3 country code")
+    country_name: str = Field(..., description="Full English country name")
     year: int = Field(..., description="Year of the observation")
     compound_risk_score: float = Field(
         ..., ge=0, le=100, description="Compound Risk Score 0-100 (higher = more at risk)"
@@ -36,6 +37,7 @@ class TimeSeriesPoint(BaseModel):
 
 class CountryDetail(BaseModel):
     iso3: str
+    country_name: str
     timeseries: list[TimeSeriesPoint]
 
 

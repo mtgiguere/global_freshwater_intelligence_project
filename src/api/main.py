@@ -11,6 +11,7 @@ Run locally:
 from pathlib import Path
 
 import pandas as pd
+import pycountry
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -148,11 +149,10 @@ def global_risk() -> list[CountryRisk]:
     """
     panel = _load_panel()
     if panel is None:
-        # Return a small synthetic set when real data is unavailable (test/CI)
         return [
-            CountryRisk(iso3="AFG", year=2023, compound_risk_score=72.4),
-            CountryRisk(iso3="FRA", year=2023, compound_risk_score=18.1),
-            CountryRisk(iso3="IND", year=2023, compound_risk_score=55.3),
+            CountryRisk(iso3="AFG", country_name="Afghanistan", year=2023, compound_risk_score=72.4),
+            CountryRisk(iso3="FRA", country_name="France",      year=2023, compound_risk_score=18.1),
+            CountryRisk(iso3="IND", country_name="India",       year=2023, compound_risk_score=55.3),
         ]
 
     latest_year = int(panel["year"].max())
@@ -164,9 +164,11 @@ def global_risk() -> list[CountryRisk]:
         # FSI ranges 0-120; we normalise to 0-100.
         fsi = _safe_float(row.get("fsi_score"))
         crs = round(min(fsi / 1.2, 100.0), 1) if fsi is not None else 50.0
+        iso3 = str(row["iso3"])
         results.append(
             CountryRisk(
-                iso3=str(row["iso3"]),
+                iso3=iso3,
+                country_name=_country_name(iso3),
                 year=latest_year,
                 compound_risk_score=crs,
             )
@@ -183,11 +185,11 @@ def country_detail(iso3: str) -> CountryDetail:
     """
     panel = _load_panel()
     if panel is None:
-        # Synthetic response for test/CI
         if iso3.upper() not in {"AFG", "FRA", "IND", "USA", "NGA"}:
             raise HTTPException(status_code=404, detail=f"Country {iso3} not found")
         return CountryDetail(
             iso3=iso3.upper(),
+            country_name=_country_name(iso3.upper()),
             timeseries=[
                 TimeSeriesPoint(
                     year=2020,
@@ -220,7 +222,7 @@ def country_detail(iso3: str) -> CountryDetail:
                 ucdp_conflict_binary=_safe_int(row.get("ucdp_conflict_binary")),
             )
         )
-    return CountryDetail(iso3=iso3.upper(), timeseries=timeseries)
+    return CountryDetail(iso3=iso3.upper(), country_name=_country_name(iso3.upper()), timeseries=timeseries)
 
 
 @app.get("/api/v1/hypotheses", response_model=list[HypothesisResult])
@@ -231,6 +233,14 @@ def hypotheses_summary() -> list[HypothesisResult]:
     statistical significance alongside the scatter plots.
     """
     return _HYPOTHESIS_RESULTS
+
+
+def _country_name(iso3: str) -> str:
+    """Look up the full English country name from an ISO 3166-1 alpha-3 code."""
+    try:
+        return pycountry.countries.get(alpha_3=iso3).name
+    except AttributeError:
+        return iso3
 
 
 def _safe_float(val) -> float | None:
