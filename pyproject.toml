@@ -72,6 +72,7 @@ ignore = []
 # X (feature matrix) and y (target) are universal ML conventions — exempt from
 # the lowercase naming rule that would rename them to illegible alternatives.
 "src/models/*.py" = ["N803", "N806"]
+"src/api/main.py" = ["N803", "N806"]
 "tests/models/*.py" = ["N803", "N806"]
 
 [tool.ruff.format]
@@ -103,6 +104,9 @@ omit = [
     "src/ingest/download/ucdp.py",
     "src/ingest/download/unodc.py",
     "src/ingest/download/who.py",
+    # ML training CLI — training loops are not unit-testable in RED/GREEN sense;
+    # unit-testable pieces (feature engineering, target construction) are in tests/models/
+    "src/models/train_all.py",
 ]
 
 [tool.coverage.report]

@@ -5,10 +5,12 @@ A wrong lag, a data leakage bug, or a normalisation error will silently
 corrupt every model trained downstream. These tests catch that.
 """
 
+import numpy as np
 import pandas as pd
 
 from src.models.features import (
     add_lag_features,
+    add_log_transforms,
     add_rolling_features,
     temporal_train_test_split,
 )
@@ -102,6 +104,94 @@ def test_temporal_train_test_split_no_leakage():
     train, test = temporal_train_test_split(panel, test_from_year=2015)
     assert train["year"].max() < 2015
     assert test["year"].min() >= 2015
+
+
+# ---------------------------------------------------------------------------
+# add_log_transforms
+# ---------------------------------------------------------------------------
+
+
+def test_add_log_transforms_adds_log_freshwater_percap():
+    """Must add log_freshwater_percap derived from renewable_freshwater_percap."""
+    df = pd.DataFrame(
+        {
+            "iso3": ["AFG"],
+            "year": [2020],
+            "renewable_freshwater_percap": [1000.0],
+        }
+    )
+    result = add_log_transforms(df)
+    assert "log_freshwater_percap" in result.columns
+
+
+def test_add_log_transforms_handles_zero_without_nan():
+    """log1p(0) = 0; values of zero must not produce NaN or -inf.
+
+    Arid countries (e.g. Qatar, Kuwait) can have near-zero freshwater per
+    capita. Refugee outflows are zero for most countries in most years.
+    A NaN here propagates silently through all downstream feature engineering.
+    """
+    df = pd.DataFrame(
+        {
+            "iso3": ["TST"],
+            "year": [2020],
+            "renewable_freshwater_percap": [0.0],
+            "gdp_pc_ppp": [0.0],
+            "population": [0.0],
+        }
+    )
+    result = add_log_transforms(df)
+    assert not result["log_freshwater_percap"].isna().any()
+    assert result["log_freshwater_percap"].iloc[0] == 0.0
+
+
+def test_add_log_transforms_adds_all_three_columns():
+    """Must add log_freshwater_percap, log_gdp_pc_ppp, and log_population."""
+    df = pd.DataFrame(
+        {
+            "iso3": ["AFG"],
+            "year": [2020],
+            "renewable_freshwater_percap": [1000.0],
+            "gdp_pc_ppp": [500.0],
+            "population": [38_000_000.0],
+        }
+    )
+    result = add_log_transforms(df)
+    assert "log_gdp_pc_ppp" in result.columns
+    assert "log_population" in result.columns
+
+
+def test_add_log_transforms_preserves_original_columns():
+    """Raw source columns must remain in the output — they are used elsewhere."""
+    df = pd.DataFrame(
+        {
+            "iso3": ["AFG"],
+            "year": [2020],
+            "renewable_freshwater_percap": [1000.0],
+            "gdp_pc_ppp": [500.0],
+            "population": [38_000_000.0],
+        }
+    )
+    result = add_log_transforms(df)
+    assert "renewable_freshwater_percap" in result.columns
+    assert "gdp_pc_ppp" in result.columns
+    assert "population" in result.columns
+
+
+def test_add_log_transforms_values_are_log1p():
+    """Log values must equal numpy log1p of the clipped source value."""
+    df = pd.DataFrame(
+        {
+            "iso3": ["AFG"],
+            "year": [2020],
+            "renewable_freshwater_percap": [1000.0],
+            "gdp_pc_ppp": [500.0],
+            "population": [38_000_000.0],
+        }
+    )
+    result = add_log_transforms(df)
+    assert abs(result["log_freshwater_percap"].iloc[0] - np.log1p(1000.0)) < 1e-9
+    assert abs(result["log_gdp_pc_ppp"].iloc[0] - np.log1p(500.0)) < 1e-9
 
 
 def test_temporal_train_test_split_covers_all_rows():

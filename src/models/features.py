@@ -6,7 +6,33 @@ Cross-country leakage (e.g. taking a lag across country boundaries) produces
 silently wrong features that corrupt every model trained downstream.
 """
 
+import numpy as np
 import pandas as pd
+
+
+def add_log_transforms(panel: pd.DataFrame) -> pd.DataFrame:
+    """Add log-transformed versions of the key continuous variables.
+
+    Uses log1p (= log(1 + x)) for numerical stability: handles values near zero
+    or exactly zero without producing NaN or -inf. This is safe for freshwater
+    per capita (arid countries can be near zero) and refugee outflows (most
+    country-years are zero).
+
+    The log transform matters because GDP and freshwater per capita span multiple
+    orders of magnitude globally. Without it, model gradients are dominated by
+    high-income / high-water countries and the models perform poorly on poorer
+    countries — exactly the ones most relevant to the project's mission.
+    """
+    result = panel.copy()
+    if "renewable_freshwater_percap" in result.columns:
+        result["log_freshwater_percap"] = np.log1p(
+            result["renewable_freshwater_percap"].clip(lower=0)
+        )
+    if "gdp_pc_ppp" in result.columns:
+        result["log_gdp_pc_ppp"] = np.log1p(result["gdp_pc_ppp"].clip(lower=0))
+    if "population" in result.columns:
+        result["log_population"] = np.log1p(result["population"].clip(lower=0))
+    return result
 
 
 def add_lag_features(
