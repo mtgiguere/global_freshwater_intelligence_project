@@ -578,3 +578,73 @@ a behavioral guarantee.
 > and has fewer failure modes — not because the developer was smarter, but because
 > each test forced the question: "what is the minimum interface that satisfies this
 > one behavior?" The answer is always simpler than what you planned.
+
+---
+
+## Methodological Notes — Data Limitations Discovered During EDA
+
+These are not engineering bugs. They are scientific observations about the data that
+shape how the Phase 3 analysis must be designed and interpreted.
+
+### Annual Averages Mask Seasonal Water Stress
+
+**Discovery (Phase 2 EDA):**
+The primary exposure variable — `renewable_freshwater_percap` from AQUASTAT — is an
+annual average. This makes countries like India, Pakistan, and the Sahel *appear*
+adequately watered when they are effectively bone-dry for 6–9 months of the year.
+
+**The mechanism:**
+Monsoon climates receive the majority of annual precipitation in a 60–90 day window.
+When the monsoon arrives, the ground is baked hard from months of heat. Water runs off
+as floods rather than infiltrating to recharge aquifers. The annual "total" looks fine.
+The lived reality is severe seasonal scarcity for most of the year.
+
+**Why this matters for each hypothesis:**
+- H1–H4: Cross-sectional correlations between freshwater and human outcomes are
+  artificially weakened because the annual average misclassifies seasonally-arid
+  countries as water-secure.
+- H7 (groundwater): Monsoon countries are among the heaviest aquifer extractors
+  precisely *because* surface water is seasonally unreliable. GRACE data reveals
+  the depletion that annual averages hide.
+
+**What this means for Phase 3:**
+1. Annual freshwater per capita is a necessary but insufficient exposure variable.
+2. Fixed effects panel regression partially addresses this by controlling for
+   time-invariant country characteristics (including climate type).
+3. The SPEI (Standardised Precipitation-Evapotranspiration Index) from CMIP6/WorldClim
+   data captures drought duration and intensity at monthly resolution and should be
+   included as a supplementary exposure variable in Phase 3 models.
+4. A `seasonal_aridity_flag` (see below) should be computed and used as a moderating
+   variable — effects of freshwater stress may be stronger in seasonally arid countries.
+
+### The Seasonal Aridity Flag — Plan
+
+**Definition:** A country-year is seasonally arid if it experiences more than 6 months
+per year with average precipitation below 50mm (roughly 1.6mm/day — the standard
+meteorological dry month threshold).
+
+**Data source:** WorldClim 2.1 — 30-year average monthly precipitation at 2.5 arc-minute
+resolution, available as free GeoTIFF downloads at worldclim.org.
+
+**Implementation plan:**
+1. Download 12 monthly precipitation GeoTIFFs from WorldClim 2.1.
+2. Aggregate each raster to country level (area-weighted mean, same approach as GRACE).
+3. For each country: count months where monthly_precip_mm < 50.
+4. Output variables:
+   - `dry_months_count` — integer 0–12, number of months below threshold
+   - `seasonal_aridity_flag` — boolean, True if dry_months_count > 6
+5. Add both to the Master Panel as static country-level features (WorldClim is a
+   long-term climatological average, not time-varying — join on iso3 only, not year).
+
+**Expected findings:**
+Countries flagged: most of MENA, Sahel, Horn of Africa, Pakistan, northwestern India,
+Central Asia, northern Mexico, southwestern USA, parts of Brazil (Nordeste), Australia
+(interior). These are exactly the countries where the annual freshwater average
+misrepresents lived water scarcity.
+
+**Phase 3 moderation analysis:**
+Run regressions separately for `seasonal_aridity_flag == True` and `== False`.
+The hypothesis is that H1–H5 effect sizes will be significantly larger in the
+seasonally-arid group — because in these countries, a reduction in annual freshwater
+represents a reduction in an already marginal and unreliable supply, not just a
+reduction from abundance.
