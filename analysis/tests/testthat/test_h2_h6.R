@@ -4,6 +4,9 @@ library(fixest)
 source(here::here("R", "load_panel.R"))
 source(here::here("R", "models.R"))
 
+# Hypothesis tests require the real Master Panel (gitignored processed data).
+# They are skipped in CI and run fully when data/processed/master_panel_r.csv exists.
+skip_if_not(file.exists(panel_path()), "master_panel_r.csv not found -- skipping H2-H5 tests")
 panel <- load_panel()
 
 # H2: Freshwater -> Government Fragility (FSI score)
