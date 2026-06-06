@@ -43,6 +43,18 @@ export interface HypothesisResult {
   note?: string;
 }
 
+export interface CountryPrediction {
+  iso3: string;
+  country_name: string;
+  year: number;
+  scarcity_score: number;
+  instability_probability: number;
+  migration_score: number;
+  compound_risk_score: number;
+  /** False when the API is returning synthetic CI fallback data rather than real model output. */
+  is_trained: boolean;
+}
+
 async function get<T>(path: string): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`);
   if (!response.ok) {
@@ -56,4 +68,6 @@ export const api = {
   countryDetail: (iso3: string) =>
     get<CountryDetail>(`/api/v1/country/${iso3}`),
   hypotheses: () => get<HypothesisResult[]>("/api/v1/hypotheses"),
+  predictCountry: (iso3: string) =>
+    get<CountryPrediction>(`/api/v1/predict/${iso3}`),
 };

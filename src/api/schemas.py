@@ -41,6 +41,31 @@ class CountryDetail(BaseModel):
     timeseries: list[TimeSeriesPoint]
 
 
+class CountryPrediction(BaseModel):
+    """ML model forward projection for one country.
+
+    scarcity_score: GradientBoosting model output (0-1, higher = more scarce)
+    instability_probability: XGBoost model output (0-1, probability of conflict)
+    migration_score: RandomForest model output (0-1, higher = more displacement)
+    compound_risk_score: Weighted combination of all three (0-100)
+    is_trained: False when returning synthetic CI fallback data (no real parquet)
+    """
+
+    iso3: str = Field(..., description="ISO 3166-1 alpha-3 country code")
+    country_name: str = Field(..., description="Full English country name")
+    year: int = Field(..., description="Projection year")
+    scarcity_score: float = Field(..., ge=0, le=1)
+    instability_probability: float = Field(..., ge=0, le=1)
+    migration_score: float = Field(..., ge=0, le=1)
+    compound_risk_score: float = Field(..., ge=0, le=100)
+    is_trained: bool = Field(
+        ...,
+        description=(
+            "True when scores come from real trained models; False for synthetic CI fallback"
+        ),
+    )
+
+
 class HypothesisResult(BaseModel):
     id: str = Field(..., description="H1, H2, ... H7")
     label: str
