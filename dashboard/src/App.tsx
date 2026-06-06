@@ -45,7 +45,7 @@ export default function App() {
       <main style={{ padding: 24 }}>
         {active === "atlas"    && <GlobalWaterAtlas onCountrySelect={setCountry} />}
         {active === "outcomes" && <OutcomesExplorer />}
-        {active === "country"  && <CountryDeepDive iso3={country} />}
+        {active === "country"  && <CountryDeepDive key={country} iso3={country} />}
         {active === "futures"  && <MLFutures iso3={country} />}
       </main>
     </div>

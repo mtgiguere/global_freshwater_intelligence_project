@@ -27,12 +27,15 @@ export default function CountryDeepDive({ iso3 }: { iso3: string }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
+    // The parent renders this component with key={iso3}, so it remounts on every
+    // country change — initial state (loading=true, error=null) is already correct.
+    // A cancellation flag prevents stale state updates if the component unmounts
+    // before the fetch resolves (e.g. rapid country switching).
+    let active = true
     api.countryDetail(iso3)
-      .then(setDetail)
-      .catch(() => setError(`No data found for country code "${iso3}"`))
-      .finally(() => setLoading(false));
+      .then(data  => { if (active) { setDetail(data);  setLoading(false) } })
+      .catch(()   => { if (active) { setError(`No data found for country code "${iso3}"`); setLoading(false) } })
+    return () => { active = false }
   }, [iso3]);
 
   if (loading) return <p>Loading data for {iso3}…</p>;
