@@ -1,4 +1,24 @@
 library(fixest)
+library(dplyr)
+
+#' Compute per-country groundwater depletion rate (cm LWE per year) from GRACE data.
+#'
+#' Fits a simple linear trend (lm) to grace_lwe_anomaly_cm vs year per country.
+#' Negative slope = aquifer depletion. Positive slope = recharge.
+#'
+#' @param panel Data frame containing the master panel.
+#' @return Data frame with iso3 and grace_depletion_rate_cm_yr columns.
+compute_grace_trend <- function(panel) {
+  panel |>
+    filter(!is.na(grace_lwe_anomaly_cm)) |>
+    group_by(iso3) |>
+    filter(n() >= 5) |>  # require at least 5 years of data
+    summarise(
+      grace_depletion_rate_cm_yr = coef(lm(grace_lwe_anomaly_cm ~ year))[["year"]],
+      n_grace_years = n(),
+      .groups = "drop"
+    )
+}
 
 #' Fit a two-way fixed effects panel model.
 #'

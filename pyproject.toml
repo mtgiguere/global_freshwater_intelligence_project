@@ -81,6 +81,7 @@ omit = [
     "src/ingest/download/worldbank.py",
     "src/ingest/download/aquastat.py",
     "src/ingest/download/acled.py",
+    "src/ingest/download/grace_process.py",
     "src/pipeline/assemble.py",
     "src/ingest/download/fsi.py",
     "src/ingest/download/grace.py",

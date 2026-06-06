@@ -13,6 +13,7 @@ import pandas as pd
 
 from src.ingest.aquastat import load_aquastat
 from src.ingest.fsi import load_fsi
+from src.ingest.grace_panel import load_grace_panel
 from src.ingest.ucdp import load_ucdp
 from src.ingest.undesa import load_undesa
 from src.ingest.unhcr import load_unhcr
@@ -70,6 +71,7 @@ def assemble(save_parquet: bool = True) -> pd.DataFrame:
     _try("WHO", lambda: load_who(RAW / "GHDx" / "who_health.csv"))
     _try("UNHCR", lambda: load_unhcr(RAW / "unhcr" / "unhcr_displacement.csv"))
     _try("UCDP", lambda: load_ucdp(RAW / "ucdp" / "ucdp_conflicts.csv"))
+    _try("GRACE", lambda: load_grace_panel(RAW / "grace" / "grace_country_year.csv"))
 
     print(f"\nAssembling Master Panel from {len(sources)} sources...")
     panel = build_master_panel(sources)
