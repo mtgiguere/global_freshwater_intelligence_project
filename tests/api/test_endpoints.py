@@ -10,6 +10,10 @@ data transformations. They are the guarantee that the frontend can
 depend on a stable interface.
 """
 
+from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pandas as pd
 from fastapi.testclient import TestClient
 
 from src.api.main import app
@@ -172,3 +176,55 @@ def test_predict_country_iso3_is_case_insensitive():
     lower = client.get("/api/v1/predict/nga").json()
     assert upper["iso3"] == lower["iso3"]
     assert upper["compound_risk_score"] == lower["compound_risk_score"]
+
+
+def test_predict_country_is_trained_true_when_models_loaded():
+    """is_trained must be True when the endpoint uses real trained models.
+
+    When both the Master Panel and all three model files are present, the
+    endpoint must run the real models and set is_trained=True so the dashboard
+    removes the synthetic-data warning banner.
+    """
+    # Build a minimal panel with all columns the feature builders need
+    fake_panel = pd.DataFrame(
+        {
+            "iso3": ["AFG"] * 5,
+            "year": [2017, 2018, 2019, 2020, 2021],
+            "renewable_freshwater_percap": [1500.0] * 5,
+            "gdp_pc_ppp": [500.0] * 5,
+            "population": [38_000_000.0] * 5,
+            "safe_water_access_pct": [55.0] * 5,
+            "ucdp_conflict_binary": [1] * 5,
+            "grace_lwe_anomaly_cm": [-2.0] * 5,
+            "fsi_score": [108.0] * 5,
+            "refugee_outflow": [2_500_000.0] * 5,
+        }
+    )
+
+    # Instability model: XGBoost classifier — returns probability array
+    fake_instability = MagicMock()
+    fake_instability.predict_proba.return_value = np.array([[0.1, 0.9]])
+
+    # Scarcity model: GBR — returns predicted log(freshwater_percap)
+    fake_scarcity = MagicMock()
+    fake_scarcity.predict.return_value = np.array([6.5])
+
+    # Migration model: RF — returns predicted log(refugee_outflow+1)
+    fake_migration = MagicMock()
+    fake_migration.predict.return_value = np.array([14.7])
+
+    fake_models = {
+        "instability": fake_instability,
+        "scarcity": fake_scarcity,
+        "migration": fake_migration,
+        "norm": {"scarcity": {"min": 0.0, "max": 10.0}, "migration": {"min": 0.0, "max": 20.0}},
+    }
+
+    with (
+        patch("src.api.main._load_panel", return_value=fake_panel),
+        patch("src.api.main._load_models", return_value=fake_models),
+    ):
+        response = client.get("/api/v1/predict/AFG")
+
+    assert response.status_code == 200
+    assert response.json()["is_trained"] is True

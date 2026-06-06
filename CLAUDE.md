@@ -15,10 +15,20 @@ Full specification: `docs/GFIP_Master_Documentation_v1.0.docx`.
 
 ## Current State
 
-**Phase 1: complete.** 9 ingest modules + all sources downloaded + Master Panel assembled.
-103 tests, 100% branch coverage. Master Panel: 17,070 rows x 35 cols, 274 countries,
-1946-2025, saved to data/processed/master_panel.parquet.
-Next: Phase 2 EDA (notebooks/01_eda.ipynb) -> Phase 3 hypothesis testing (R).
+**All five phases complete. 177 Python tests · 43 frontend tests · 97% coverage.**
+
+```
+Phase 1  ✓  Master Panel: 17,070 rows × 35 cols, 274 countries, 1946–2025
+Phase 2  ✓  EDA: notebooks/01_eda.ipynb
+Phase 3  ✓  H1–H7 all confirmed (R, analysis/) — results hardcoded in API
+Phase 4  ✓  3 ML models (XGBoost, GBR, RF) + Compound Risk Score + FastAPI
+Phase 5  ✓  React dashboard (5 panels, Deck.gl globe, Recharts, search)
+            Remaining: deploy (Vercel frontend + Render API)
+```
+
+**Next:** `uv run python src/models/train_all.py` to train models on real data, then deploy.
+
+### Phase 1 — Master Panel columns
 
 | Module | Key output columns |
 |--------|--------------------|
@@ -32,6 +42,41 @@ Next: Phase 2 EDA (notebooks/01_eda.ipynb) -> Phase 3 hypothesis testing (R).
 | `who` | `life_expectancy`, `u5mr`, `diarrhoeal_daly` |
 | `unhcr` | `refugee_outflow`, `idp_count`, `asylum_applications_origin` |
 | `undesa` | `population`, `population_urban`, `population_rural` |
+
+### Phase 4 — ML models (`src/models/`)
+
+| File | Purpose |
+|------|---------|
+| `features.py` | `add_lag_features`, `add_rolling_features`, `add_log_transforms`, `temporal_train_test_split` |
+| `instability.py` | XGBoost binary classifier — P(FSI jump OR conflict onset within 3yr) |
+| `scarcity.py` | GradientBoosting regression — log(freshwater/cap 5yr ahead) |
+| `migration.py` | RandomForest regression — log(refugee outflow + 1) |
+| `compound_risk.py` | `compute_compound_risk_score` — weights: scarcity 30%, instability 35%, migration 35% |
+| `train_all.py` | CLI: trains all three models, evaluates vs baselines, saves to `data/models/` |
+
+### Phase 5 — API endpoints (`src/api/`)
+
+| Endpoint | Behaviour |
+|----------|-----------|
+| `GET /health` | Liveness probe |
+| `GET /api/v1/global/risk` | CRS for all countries |
+| `GET /api/v1/country/{iso3}` | Full time-series |
+| `GET /api/v1/hypotheses` | H1–H7 results |
+| `GET /api/v1/predict/{iso3}` | ML predictions; `is_trained=True` once `train_all.py` has run |
+
+All endpoints have a synthetic CI fallback — the API works without the real parquet or model files.
+
+### Phase 5 — Dashboard panels (`dashboard/src/panels/`)
+
+| Panel | Key tech |
+|-------|---------|
+| `GlobalWaterAtlas` | Deck.gl GlobeView + GeoJsonLayer, CRS colour bins |
+| `OutcomesExplorer` | H1–H7 bar chart + plain-language text |
+| `CountryDeepDive` | Recharts LineChart (4 metrics), cancellation pattern |
+| `HypothesisDetail` | Scatter plot per hypothesis |
+| `MLFutures` | Live `/predict` endpoint, score bars, `is_trained` warning banner |
+
+Frontend tests: Vitest + React Testing Library (`dashboard/src/**/__tests__/`).
 
 ## Non-Negotiable Engineering Rules
 
@@ -209,13 +254,13 @@ Additional tests as the data shape demands (aggregation correctness, spatial wei
 | Language | Python 3.12+ |
 | Package manager | uv |
 | Linting / formatting | Ruff |
-| Testing | pytest + hypothesis |
+| Testing | pytest + hypothesis (Python) · Vitest + RTL (frontend) |
 | Dep vuln scanning | pip-audit |
 | Data | pandas, numpy |
 | Spatial / gridded | xarray, geopandas, regionmask |
-| ML | scikit-learn, xgboost, pytorch (Phase 4) |
-| API | FastAPI + Pydantic (Phase 4) |
-| Frontend | React 18 + TypeScript + Deck.gl (Phase 5) |
+| ML | scikit-learn, xgboost |
+| API | FastAPI + Pydantic |
+| Frontend | React 18 + TypeScript + Deck.gl + Recharts |
 | CI/CD | GitHub Actions |
 
 ## Repository Structure

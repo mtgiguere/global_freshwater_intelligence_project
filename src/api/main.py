@@ -8,8 +8,10 @@ Run locally:
     uv run uvicorn src.api.main:app --reload --port 8000
 """
 
+import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pycountry
 from fastapi import FastAPI, HTTPException
@@ -38,6 +40,7 @@ app.add_middleware(
 )
 
 _PANEL_PATH = Path(__file__).parents[2] / "data" / "processed" / "master_panel.parquet"
+_MODELS_DIR = Path(__file__).parents[2] / "data" / "models"
 
 # Phase 3 results — hardcoded from the R analysis (Phase 5 will load from DB)
 _HYPOTHESIS_RESULTS = [
@@ -133,6 +136,32 @@ def _load_panel() -> pd.DataFrame | None:
     if _PANEL_PATH.exists():
         return pd.read_parquet(_PANEL_PATH)
     return None
+
+
+def _load_models() -> dict | None:
+    """Load trained model files if all three exist; return None in CI.
+
+    Returns a dict with keys 'instability', 'scarcity', 'migration', and 'norm'.
+    The 'norm' entry is the normalization stats JSON written by train_all.py:
+      {"scarcity": {"min": ..., "max": ...}, "migration": {"min": ..., "max": ...}}
+    These stats are needed to map raw model outputs to [0,1] for the CRS formula.
+    """
+    required = [
+        "instability_model.joblib",
+        "scarcity_model.joblib",
+        "migration_model.joblib",
+        "normalization_stats.json",
+    ]
+    if not all((_MODELS_DIR / f).exists() for f in required):
+        return None
+    import joblib
+
+    return {
+        "instability": joblib.load(_MODELS_DIR / "instability_model.joblib"),
+        "scarcity": joblib.load(_MODELS_DIR / "scarcity_model.joblib"),
+        "migration": joblib.load(_MODELS_DIR / "migration_model.joblib"),
+        "norm": json.loads((_MODELS_DIR / "normalization_stats.json").read_text()),
+    }
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -303,9 +332,10 @@ _SYNTHETIC_PREDICTIONS: dict[str, CountryPrediction] = {
 def predict_country(iso3: str) -> CountryPrediction:
     """Return ML model predictions for one country.
 
-    When the trained model file exists, runs the Phase 4 models (XGBoost
-    instability, GradientBoosting scarcity, RandomForest migration) on the
-    most recent panel data and returns a live forecast.
+    When the trained model files exist (run train_all.py first), uses the
+    Phase 4 models — XGBoost instability, GradientBoosting scarcity,
+    RandomForest migration — on the most recent panel row for this country
+    and returns is_trained=True.
 
     In CI and environments without the parquet/model files, returns synthetic
     hardcoded data for AFG/FRA/IND/USA/NGA with is_trained=False so the
@@ -313,20 +343,81 @@ def predict_country(iso3: str) -> CountryPrediction:
     """
     iso3 = iso3.upper()
     panel = _load_panel()
-    if panel is None:
+    models = _load_models()
+
+    if panel is None or models is None:
         prediction = _SYNTHETIC_PREDICTIONS.get(iso3)
         if prediction is None:
             raise HTTPException(status_code=404, detail=f"Country {iso3} not found")
         return prediction
 
-    # Real model path: check country is in panel, then run models.
-    # Full implementation follows once train_all.py is complete.
-    if iso3 not in panel["iso3"].values:
+    # Real model path — panel and all three model files are present.
+    country_rows = panel[panel["iso3"] == iso3].sort_values("year")
+    if country_rows.empty:
         raise HTTPException(status_code=404, detail=f"Country {iso3} not found")
-    prediction = _SYNTHETIC_PREDICTIONS.get(iso3)
-    if prediction is None:
-        raise HTTPException(status_code=404, detail=f"Country {iso3} not found")
-    return prediction
+
+    return _run_models(iso3, country_rows, models)
+
+
+def _run_models(iso3: str, country_rows: pd.DataFrame, models: dict) -> CountryPrediction:
+    """Run the three Phase 4 models on the most recent panel row for iso3.
+
+    Feature building uses the full country history for lag/rolling windows,
+    then predicts on only the last (most recent) row.
+
+    Normalisation uses the training-set min/max saved by train_all.py:
+    - instability: already [0,1] (XGBoost probability output)
+    - scarcity: predicted log(freshwater_percap), mapped to [0,1] via saved range
+      BUT inverted: lower freshwater = higher scarcity risk
+    - migration: predicted log(refugee_outflow+1), mapped to [0,1] via saved range
+    """
+    from src.models.compound_risk import WEIGHTS
+    from src.models.features import add_log_transforms
+    from src.models.instability import build_instability_features
+    from src.models.migration import build_migration_features
+    from src.models.scarcity import build_scarcity_features
+
+    panel_with_logs = add_log_transforms(country_rows)
+
+    X_instab = build_instability_features(panel_with_logs)
+    X_scarc = build_scarcity_features(panel_with_logs)
+    X_migr = build_migration_features(panel_with_logs)
+
+    # Predict on the last row (most recent year)
+    instab_prob = float(models["instability"].predict_proba(X_instab.iloc[[-1]])[:, 1][0])
+
+    scarc_raw = float(models["scarcity"].predict(X_scarc.iloc[[-1]])[0])
+    s_min = models["norm"]["scarcity"]["min"]
+    s_max = models["norm"]["scarcity"]["max"]
+    # Lower predicted log(freshwater) = higher scarcity — so invert the [0,1] scale
+    scarc_norm = 1.0 - float(np.clip((scarc_raw - s_min) / max(s_max - s_min, 1e-9), 0, 1))
+
+    migr_raw = float(models["migration"].predict(X_migr.iloc[[-1]])[0])
+    m_min = models["norm"]["migration"]["min"]
+    m_max = models["norm"]["migration"]["max"]
+    migr_norm = float(np.clip((migr_raw - m_min) / max(m_max - m_min, 1e-9), 0, 1))
+
+    crs = round(
+        (
+            WEIGHTS["scarcity"] * scarc_norm
+            + WEIGHTS["instability"] * instab_prob
+            + WEIGHTS["migration"] * migr_norm
+        )
+        * 100.0,
+        1,
+    )
+    latest_year = int(country_rows["year"].max())
+
+    return CountryPrediction(
+        iso3=iso3,
+        country_name=_country_name(iso3),
+        year=latest_year,
+        scarcity_score=round(scarc_norm, 4),
+        instability_probability=round(instab_prob, 4),
+        migration_score=round(migr_norm, 4),
+        compound_risk_score=min(crs, 100.0),
+        is_trained=True,
+    )
 
 
 def _country_name(iso3: str) -> str:
