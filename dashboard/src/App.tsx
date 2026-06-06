@@ -7,11 +7,14 @@
  * human welfare without reading a single line of code.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GlobalWaterAtlas from "./panels/GlobalWaterAtlas";
 import OutcomesExplorer from "./panels/OutcomesExplorer";
 import CountryDeepDive from "./panels/CountryDeepDive";
 import MLFutures from "./panels/MLFutures";
+import CountrySearch from "./components/CountrySearch";
+import { api } from "./api/client";
+import type { CountryRisk } from "./api/client";
 
 type Panel = "atlas" | "outcomes" | "country" | "futures";
 
@@ -25,6 +28,12 @@ const NAV: { id: Panel; label: string }[] = [
 export default function App() {
   const [active, setActive] = useState<Panel>("atlas");
   const [country, setCountry] = useState<string>("AFG");
+  const [allCountries, setAllCountries] = useState<CountryRisk[]>([]);
+
+  // Load the country list once for the search autocomplete.
+  useEffect(() => {
+    api.globalRisk().then(setAllCountries).catch(() => {/* search degrades gracefully to empty */});
+  }, []);
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", margin: 0 }}>
@@ -33,13 +42,17 @@ export default function App() {
           <h1 style={{ margin: 0, fontSize: 18 }}>Global Freshwater Intelligence Project</h1>
           <p style={{ margin: 0, fontSize: 12, opacity: 0.7 }}>Water · Stability · Human Welfare · 274 Countries · 1946–2025</p>
         </div>
-        <nav style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+        <nav style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
           {NAV.map(({ id, label }) => (
             <button key={id} onClick={() => setActive(id)}
               style={{ background: active === id ? "#2196f3" : "transparent", color: "white", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 4, padding: "6px 14px", cursor: "pointer", fontSize: 13 }}>
               {label}
             </button>
           ))}
+          <CountrySearch
+            countries={allCountries}
+            onSelect={iso3 => { setCountry(iso3); setActive("country"); }}
+          />
         </nav>
       </header>
       <main style={{ padding: 24 }}>
