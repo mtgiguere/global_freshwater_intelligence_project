@@ -17,7 +17,14 @@
  */
 
 import { useEffect, useState } from "react";
-import { api, CountryDetail } from "../api/client";
+import { api } from "../api/client";
+import type { CountryDetail } from "../api/client";
+
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const countryName = (iso3: string) => {
+  try { return regionNames.of(iso3) ?? iso3; }
+  catch { return iso3; }
+};
 
 export default function CountryDeepDive({ iso3 }: { iso3: string }) {
   const [detail, setDetail] = useState<CountryDetail | null>(null);
@@ -41,7 +48,7 @@ export default function CountryDeepDive({ iso3 }: { iso3: string }) {
 
   return (
     <div style={{ maxWidth: 1000 }}>
-      <h2>Country Deep Dive — {detail.iso3}</h2>
+      <h2>Country Deep Dive — {countryName(detail.iso3)} <span style={{ color: "#aaa", fontSize: 16, fontWeight: 400 }}>({detail.iso3})</span></h2>
       <p style={{ color: "#555" }}>
         Annual observations from the Master Panel (1990 onwards).
         All variables are sourced from internationally recognised databases:

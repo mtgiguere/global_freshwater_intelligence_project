@@ -17,7 +17,16 @@
  */
 
 import { useEffect, useState } from "react";
-import { api, CountryRisk } from "../api/client";
+import { api } from "../api/client";
+import type { CountryRisk } from "../api/client";
+
+// Browser built-in: converts ISO3 codes to full country names with no extra packages.
+// "ABW" → "Aruba", "AFG" → "Afghanistan", etc.
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const countryName = (iso3: string) => {
+  try { return regionNames.of(iso3) ?? iso3; }
+  catch { return iso3; }
+};
 
 const riskLabel = (score: number) => {
   if (score >= 70) return { label: "Critical", color: "#c62828" };
@@ -72,7 +81,10 @@ export default function GlobalWaterAtlas({ onCountrySelect }: { onCountrySelect:
             return (
               <tr key={r.iso3} style={{ borderBottom: "1px solid #eee", cursor: "pointer" }}
                 onClick={() => onCountrySelect(r.iso3)}>
-                <td style={{ padding: "8px 12px", fontWeight: 500 }}>{r.iso3}</td>
+                <td style={{ padding: "8px 12px", fontWeight: 500 }}>
+                  {countryName(r.iso3)}
+                  <span style={{ color: "#aaa", fontSize: 11, marginLeft: 6 }}>{r.iso3}</span>
+                </td>
                 <td style={{ padding: "8px 12px", color: "#777" }}>{r.year}</td>
                 <td style={{ padding: "8px 12px" }}>
                   <span style={{ background: color, color: "white", borderRadius: 4, padding: "2px 8px", fontSize: 12 }}>{label}</span>

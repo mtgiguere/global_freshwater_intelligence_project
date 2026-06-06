@@ -18,10 +18,16 @@
  * and explains the methodology while live predictions are being wired up.
  */
 
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const countryName = (iso3: string) => {
+  try { return regionNames.of(iso3) ?? iso3; }
+  catch { return iso3; }
+};
+
 export default function MLFutures({ iso3 }: { iso3: string }) {
   return (
     <div style={{ maxWidth: 800 }}>
-      <h2>ML Futures — Projecting Water Risk for {iso3}</h2>
+      <h2>ML Futures — {countryName(iso3)} <span style={{ color: "#aaa", fontSize: 16, fontWeight: 400 }}>({iso3})</span></h2>
       <p style={{ color: "#555" }}>
         Three machine learning models combine to produce forward-looking risk projections:
       </p>

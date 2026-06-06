@@ -17,7 +17,8 @@
  */
 
 import { useEffect, useState } from "react";
-import { api, HypothesisResult } from "../api/client";
+import { api } from "../api/client";
+import type { HypothesisResult } from "../api/client";
 
 const interpret = (h: HypothesisResult): string => {
   const dir = h.beta > 0 ? "increases" : "decreases";
