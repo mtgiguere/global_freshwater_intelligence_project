@@ -112,3 +112,63 @@ def test_hypotheses_summary_contains_all_hypotheses():
     ids = {h["id"] for h in data}
     for expected in ["H1", "H2", "H3", "H4", "H4b", "H5", "H6", "H7"]:
         assert expected in ids
+
+
+# ---------------------------------------------------------------------------
+# Country prediction endpoint
+# ---------------------------------------------------------------------------
+
+
+def test_predict_country_returns_200_for_known_iso3():
+    """GET /api/v1/predict/{iso3} must return 200 for a known country."""
+    response = client.get("/api/v1/predict/AFG")
+    assert response.status_code == 200
+
+
+def test_predict_country_returns_404_for_unknown_iso3():
+    """An ISO3 code not in the panel must return 404, not a 500."""
+    response = client.get("/api/v1/predict/ZZZ")
+    assert response.status_code == 404
+
+
+def test_predict_country_response_has_required_fields():
+    """Response must contain all CountryPrediction schema fields."""
+    data = client.get("/api/v1/predict/AFG").json()
+    for field in (
+        "iso3",
+        "country_name",
+        "year",
+        "scarcity_score",
+        "instability_probability",
+        "migration_score",
+        "compound_risk_score",
+        "is_trained",
+    ):
+        assert field in data, f"Missing field: {field}"
+
+
+def test_predict_country_scores_are_in_valid_ranges():
+    """Component scores must be [0,1] and compound_risk_score must be [0,100]."""
+    data = client.get("/api/v1/predict/IND").json()
+    assert 0 <= data["scarcity_score"] <= 1
+    assert 0 <= data["instability_probability"] <= 1
+    assert 0 <= data["migration_score"] <= 1
+    assert 0 <= data["compound_risk_score"] <= 100
+
+
+def test_predict_country_is_trained_is_false_without_model_file():
+    """is_trained must be False when serving synthetic CI fallback data.
+
+    The dashboard uses this flag to display a 'no trained model' caveat
+    so users know the scores are illustrative, not real forecasts.
+    """
+    data = client.get("/api/v1/predict/USA").json()
+    assert data["is_trained"] is False
+
+
+def test_predict_country_iso3_is_case_insensitive():
+    """Lowercase and mixed-case ISO3 codes must resolve the same as uppercase."""
+    upper = client.get("/api/v1/predict/NGA").json()
+    lower = client.get("/api/v1/predict/nga").json()
+    assert upper["iso3"] == lower["iso3"]
+    assert upper["compound_risk_score"] == lower["compound_risk_score"]
