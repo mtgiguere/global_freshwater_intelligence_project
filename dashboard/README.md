@@ -1,73 +1,101 @@
-# React + TypeScript + Vite
+# GFIP Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 18 + TypeScript frontend for the Global Freshwater Intelligence Project.
 
-Currently, two official plugins are available:
+**Live: https://mtgiguere.github.io/global_freshwater_intelligence_project/**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Running locally
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev     # -> http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The dashboard needs the API running at `http://localhost:8000` for live data.
+See the root [README.md](../README.md) for API setup instructions.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+If the API is not running, the dashboard still works — it falls back to the
+pre-generated static JSON files in `public/data/` automatically.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## Deployment modes
+
+| Mode | How | Data source |
+|------|-----|-------------|
+| Local dev | `npm run dev` + API running | Live FastAPI at `VITE_API_URL` |
+| GitHub Pages | Push to `main` — auto-deploy | Pre-generated JSON in `public/data/` |
+| Live API | Set `VITE_API_URL` at build time | Live FastAPI server |
+
+The switch between modes is controlled by the `VITE_API_URL` environment variable:
+- **Set** — calls the live API
+- **Not set** — reads from `public/data/*.json`
+
+---
+
+## Updating the static data
+
+The pre-generated JSON files in `public/data/` are committed to the repo and
+served directly by GitHub Pages. Regenerate them whenever the Master Panel or
+trained models change:
+
+```bash
+# From the project root (not from dashboard/)
+$env:PYTHONPATH = "."; python scripts/generate_static.py   # PowerShell
+PYTHONPATH=. python scripts/generate_static.py             # bash/zsh
+```
+
+Then commit and push — GitHub Actions redeploys automatically.
+
+---
+
+## Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `npm run dev` | Start Vite dev server with hot reload |
+| `npm run build` | Production build to `dist/` |
+| `npm test` | Run Vitest + React Testing Library tests |
+| `npm run lint` | ESLint |
+
+---
+
+## Structure
+
+```
+dashboard/
+  public/
+    data/                     # Pre-generated static JSON (committed to repo)
+      global-risk.json        # CRS for all 179 countries
+      hypotheses.json         # H1-H7 regression results
+      country/{ISO3}.json     # Historical time-series per country
+      predict/{ISO3}.json     # ML predictions per country
+  src/
+    api/
+      client.ts               # All API calls — static vs live mode handled here
+    components/
+      CountrySearch.tsx        # Autocomplete country selector
+    panels/
+      GlobalWaterAtlas.tsx     # Deck.gl world map + country click interaction
+      OutcomesExplorer.tsx     # H1-H7 global findings + per-country spotlight
+      CountryDeepDive.tsx      # Historical time-series charts (Recharts)
+      MLFutures.tsx            # ML risk forecasts per country
+    utils/
+      riskColors.ts            # CRS score to fill colour mapping
+      numericToIso3.ts         # Numeric country ID to ISO3 lookup
+    App.tsx                    # Root: navigation, shared selectedIso3 state
+```
+
+---
+
+## Tests
+
+Tests live alongside components in `src/**/__tests__/`.
+Deck.gl (WebGL) is mocked — data-fetching lifecycle and UI state are tested with RTL.
+
+```bash
+npm test              # run all
+npm test -- --watch   # watch mode
 ```

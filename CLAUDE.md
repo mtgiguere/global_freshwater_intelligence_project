@@ -15,18 +15,32 @@ Full specification: `docs/GFIP_Master_Documentation_v1.0.docx`.
 
 ## Current State
 
-**All five phases complete. 177 Python tests · 43 frontend tests · 97% coverage.**
+**All five phases complete and deployed. 177 Python tests · 43 frontend tests · 97% coverage.**
 
 ```
 Phase 1  ✓  Master Panel: 17,070 rows × 35 cols, 274 countries, 1946–2025
 Phase 2  ✓  EDA: notebooks/01_eda.ipynb
 Phase 3  ✓  H1–H7 all confirmed (R, analysis/) — results hardcoded in API
 Phase 4  ✓  3 ML models (XGBoost, GBR, RF) + Compound Risk Score + FastAPI
-Phase 5  ✓  React dashboard (5 panels, Deck.gl globe, Recharts, search)
-            Remaining: deploy (Vercel frontend + Render API)
+Phase 5  ✓  React dashboard (4 panels, Deck.gl flat map, Recharts, search)
+            Deployed to GitHub Pages — fully static, no backend required
 ```
 
-**Next:** `uv run python src/models/train_all.py` to train models on real data, then deploy.
+**Live:** https://mtgiguere.github.io/global_freshwater_intelligence_project/
+
+**Models trained:** `data/models/` contains real `.joblib` files.
+All 179 countries have real predictions (`is_trained=True`).
+
+**Static data:** `dashboard/public/data/` contains pre-generated JSON (committed).
+Regenerate after any pipeline or model change:
+```powershell
+$env:PYTHONPATH = "."; python scripts/generate_static.py
+git add dashboard/public/data/ && git commit -m "data: regenerate static JSON"
+```
+
+**`uv` note:** `uv` may not be on PATH. If so, activate `.venv` directly and use
+`python` instead of `uv run python`. For PYTHONPATH: `$env:PYTHONPATH = "."` in
+PowerShell before running any `src.*` script.
 
 ### Phase 1 — Master Panel columns
 
@@ -70,11 +84,16 @@ All endpoints have a synthetic CI fallback — the API works without the real pa
 
 | Panel | Key tech |
 |-------|---------|
-| `GlobalWaterAtlas` | Deck.gl GlobeView + GeoJsonLayer, CRS colour bins |
-| `OutcomesExplorer` | H1–H7 bar chart + plain-language text |
+| `GlobalWaterAtlas` | Deck.gl MapView (flat Mercator) + GeoJsonLayer, CRS colour bins, country click, `wrapLongitude: true` |
+| `OutcomesExplorer` | H1–H7 findings-first layout, country spotlight, stats in expandable |
 | `CountryDeepDive` | Recharts LineChart (4 metrics), cancellation pattern |
-| `HypothesisDetail` | Scatter plot per hypothesis |
-| `MLFutures` | Live `/predict` endpoint, score bars, `is_trained` warning banner |
+| `MLFutures` | `/predict` endpoint or static JSON, score bars, `is_trained` warning banner |
+
+Note: `HypothesisDetail` was planned but not built — hypothesis scatter content lives in `OutcomesExplorer`.
+
+**Static deployment:** `dashboard/public/data/` holds pre-generated JSON for all endpoints.
+`dashboard/src/api/client.ts` reads from static files when `VITE_API_URL` is not set.
+`scripts/generate_static.py` regenerates all files from the FastAPI app internally.
 
 Frontend tests: Vitest + React Testing Library (`dashboard/src/**/__tests__/`).
 

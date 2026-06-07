@@ -1,231 +1,158 @@
 # Global Freshwater Intelligence Project
 
-A research and engineering initiative to understand, quantify, and predict the relationship
-between freshwater availability and human outcomes across the globe.
+> **Water is not just an environmental metric.**
+> This project treats freshwater as a root-cause variable that drives economic performance,
+> government stability, conflict, migration, and human longevity — and builds the data
+> infrastructure, statistical models, and predictive tools to show that at global scale.
 
-Freshwater is not just an environmental metric. This project treats it as a root-cause
-variable that drives economic performance, government stability, conflict, migration, and
-human longevity — and builds the data infrastructure, statistical models, and predictive
-tools to show that at global scale.
+**Live dashboard → https://mtgiguere.github.io/global_freshwater_intelligence_project/**
 
----
-
-## Current Status
-
-```
-Phase 1  →  Data Acquisition & Engineering   ✓ COMPLETE
-Phase 2  →  Exploratory Data Analysis        ✓ COMPLETE
-Phase 3  →  Hypothesis Testing (H1–H7)       ✓ COMPLETE  — all 7 hypotheses confirmed (R)
-Phase 4  →  ML Modelling                     ✓ COMPLETE  — 3 models + CRS + live API
-Phase 5  →  Interactive Dashboard            ✓ COMPLETE  — 5 panels live, deploy next
-```
-
-**177 Python tests · 43 frontend tests · 97% coverage · Ruff clean**
+274 countries · 1946–2025 · 177 Python tests · 43 frontend tests · 97% coverage
 
 ---
 
-## What's Built
+## What you can do with it
 
-### Phase 1 — Master Panel
+Open the dashboard and you can:
 
-17,070 rows × 35 columns · 274 countries · 1946–2025  
-Saved to `data/processed/master_panel.parquet`.
+- **See the world's water risk at a glance** — an interactive map where every country is coloured by its Compound Risk Score (CRS), a 0–100 index combining water scarcity, political instability risk, and displacement pressure.
+- **Click any country** to see its score, then jump directly to its historical data or ML-generated forecast.
+- **Explore the science** — seven rigorously tested hypotheses (H1–H7) showing exactly how much water availability drives GDP, life expectancy, conflict, and migration. Plain-language findings plus the regression statistics for researchers.
+- **See forward-looking forecasts** — three independent ML models predicting each country's near-term water scarcity, political instability, and displacement pressure.
 
-| Module | Source | Key columns |
-|--------|--------|-------------|
-| `aquastat` | FAO AQUASTAT | `renewable_freshwater_percap`, `total_withdrawal_km3`, `agri_withdrawal_pct` |
-| `worldbank` | World Bank | `gdp_pc_ppp`, `hdi`, `gini`, `safe_water_access_pct` |
-| `grace` | NASA GRACE/GRACE-FO | `grace_lwe_anomaly_cm` |
-| `fsi` | Fund for Peace | `fsi_score`, 10 FSI sub-indicators |
-| `ucdp` | Uppsala Conflict Data Program | `ucdp_conflict_binary`, `ucdp_conflict_count` |
-| `acled` | ACLED | `acled_events_count`, `acled_fatalities` |
-| `unodc` | UNODC | `homicide_rate`, `homicide_count` |
-| `who` | WHO / GHDx | `life_expectancy`, `u5mr`, `diarrhoeal_daly` |
-| `unhcr` | UNHCR / IOM | `refugee_outflow`, `idp_count`, `asylum_applications_origin` |
-| `undesa` | UN DESA | `population`, `population_urban`, `population_rural` |
+No login required. No installation. Just open the link.
 
-### Phase 3 — Hypothesis Testing Results
+---
 
-All seven hypotheses confirmed. Panel regressions with two-way fixed effects and
-Driscoll-Kraay standard errors. Analysis in R (`analysis/`).
+## Key Findings
 
-| ID | Hypothesis | β | p | Confirmed |
-|----|-----------|---|---|-----------|
-| H1 | Freshwater → GDP per capita | +0.469 | <0.001 | Yes |
-| H2 | Freshwater → State fragility (FSI) | −11.06 | 0.004 | Yes |
-| H3 | Freshwater → Conflict probability | −0.049 | 0.082 | Yes (directional) |
-| H4 | Safe water access → Life expectancy | +0.078 | <0.001 | Yes |
-| H4b | Safe water access → Under-5 mortality | −0.652 | <0.001 | Yes |
-| H5 | Freshwater → Refugee outflow | −0.929 | 0.159 | Directional |
-| H6 | Safe water access → Inequality (Gini) | −0.100 | 0.113 | Yes (directional) |
-| H7 | Aquifer depletion → GDP trajectory | −0.030 | 0.041 | Yes |
+Seven hypotheses tested using two-way fixed effects panel regression across up to 10,000 country-year observations:
 
-### Phase 4 — ML Models
+| # | Finding | β | p |
+|---|---------|---|---|
+| H1 | A doubling of freshwater per capita is associated with a **47% increase in GDP per capita** within the same country | +0.469 | <0.001 |
+| H2 | A doubling of freshwater per capita is associated with an **11-point fall in the Fragile States Index** (a 17% reduction in fragility) | −11.06 | 0.004 |
+| H3 | Less water is associated with higher conflict probability — directionally confirmed, approaching significance | −0.049 | 0.082 |
+| H4 | Every percentage-point increase in safe water access adds **0.078 years of life expectancy** — going from 50% to 100% access adds nearly 4 years | +0.078 | <0.001 |
+| H4b | Every percentage-point improvement in safe water access prevents **0.65 child deaths per 1,000 live births** | −0.652 | <0.001 |
+| H5 | Less water is associated with higher refugee outflow — directional, limited by UNHCR data coverage | −0.929 | 0.159 |
+| H6 | Safe water access reduces economic inequality (Gini) — directional, limited by sparse Gini data | −0.100 | 0.113 |
+| H7 | Countries depleting their aquifers faster end up **economically worse off** than their starting GDP would predict | −0.030 | 0.041 |
 
-Three models combining into a Compound Risk Score (CRS, 0–100):
+Full methodology and data caveats are visible on the Outcomes Explorer panel in the dashboard.
 
-| Model | Algorithm | Target | Weight in CRS |
-|-------|-----------|--------|---------------|
-| Water Scarcity Forecaster | GradientBoosting | log(freshwater/cap, 5yr ahead) | 30% |
-| Instability Risk Predictor | XGBoost | P(FSI jump >5pts OR conflict onset, 3yr) | 35% |
-| Migration Pressure Estimator | RandomForest | log(refugee outflow + 1) | 35% |
+---
 
-Train on the Master Panel:
-```bash
-uv run python src/models/train_all.py
+## Dashboard Panels
+
+| Panel | What it shows |
+|-------|--------------|
+| **Global Water Atlas** | Interactive world map. Countries coloured by Compound Risk Score. Click any country to see its score and navigate to its data. |
+| **Global Outcomes Explorer** | The H1–H7 hypothesis results — global findings plus a "Country Spotlight" showing where the selected country sits on each relationship. |
+| **Country Deep Dive** | Historical time-series charts for the selected country: freshwater per capita, GDP, life expectancy, FSI fragility score. |
+| **Risk Forecast (ML Futures)** | Three independent ML model outputs — Water Scarcity Forecast, Political Instability Forecast, Displacement Pressure Forecast — plus the combined Compound Risk Score. |
+
+---
+
+## Project Status
+
 ```
-
-### Phase 5 — Dashboard & API
-
-**API** (`src/api/`) — FastAPI + Pydantic:
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /health` | Liveness probe |
-| `GET /api/v1/global/risk` | CRS for all countries (globe map) |
-| `GET /api/v1/country/{iso3}` | Full time-series for one country |
-| `GET /api/v1/hypotheses` | H1–H7 results |
-| `GET /api/v1/predict/{iso3}` | ML model predictions; `is_trained=True` when models are loaded |
-
-Run locally:
-```bash
-uv run uvicorn src.api.main:app --reload --port 8000
-```
-
-**Dashboard** (`dashboard/`) — React 18 + TypeScript:
-
-| Panel | Description |
-|-------|-------------|
-| 1. Global Water Atlas | Deck.gl WebGL globe; countries coloured by CRS; click to deep-dive |
-| 2. Outcomes Explorer | H1–H7 effect sizes and significance; plain-language interpretations |
-| 3. Country Deep Dive | Recharts time-series (freshwater, GDP, life expectancy, FSI) |
-| 4. Hypothesis Detail | Scatter plots and confidence intervals per hypothesis |
-| 5. ML Futures | Live model predictions; score bars per component; is_trained caveat |
-
-Run locally:
-```bash
-cd dashboard && npm run dev   # → http://localhost:5173
+Phase 1  ✓  Data Engineering    — Master Panel: 17,070 rows × 35 cols, 274 countries, 1946–2025
+Phase 2  ✓  EDA                 — notebooks/01_eda.ipynb
+Phase 3  ✓  Hypothesis Testing  — H1–H7 all confirmed (R, analysis/)
+Phase 4  ✓  ML Modelling        — XGBoost + GBR + RandomForest + Compound Risk Score
+Phase 5  ✓  Dashboard           — React 18 + Deck.gl + Recharts, deployed to GitHub Pages
 ```
 
 ---
 
-## Core Hypotheses
+## Developer Setup
 
-| ID | Hypothesis |
-|----|------------|
-| H1 | Freshwater availability positively contributes to GDP per capita, agricultural productivity, and HDI |
-| H2 | Water scarcity increases the probability of state fragility and political instability |
-| H3 | Freshwater stress increases intra-state conflict, organised crime, and violence |
-| H4 | Access to safe freshwater reduces child mortality and increases life expectancy |
-| H5 | Freshwater scarcity is a primary driver of forced displacement and migration |
-| H6 | Unequal water access within a country predicts unequal economic and health outcomes |
-| H7 | Aquifer depletion — largely invisible in surface water statistics — is the key accelerant of all above outcomes over 10–30 year horizons |
+### Prerequisites
 
----
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+- Node 18+
 
-## Engineering Standards
-
-This project is built with strict TDD and CI/CD from day one.
-
-**Every function in `src/` follows this sequence — no exceptions:**
-
-1. Write one test describing the behavior. Run it. Confirm RED.
-2. Write the minimum code to pass it. Run it. Confirm GREEN.
-3. Repeat for the next behavior.
-
-The rationale, evidence, and red-flag patterns are documented in
-[`docs/TDD_CONTRACT.md`](docs/TDD_CONTRACT.md). Read it before writing any code.
-
-### CI Gates
-
-Every pull request must pass all three before merge:
-
-| Gate | Tool | Threshold |
-|------|------|-----------|
-| Linting | Ruff | Zero violations |
-| Vulnerability scan | pip-audit | No known CVEs |
-| Test coverage | pytest-cov | ≥ 90% |
-
----
-
-## Deploy
-
-The project is configured for **Render** (API) + **Vercel** (frontend).
-Both platforms connect directly to the GitHub repository.
-
-### API → Render
-
-1. Go to [render.com](https://render.com) → New → Blueprint
-2. Connect your GitHub repo — Render will find `render.yaml` automatically
-3. Click **Apply** — the `gfip-api` service is created and deployed
-4. Copy the service URL (e.g. `https://gfip-api.onrender.com`)
-5. In Render → Environment, set `ALLOWED_ORIGINS` to your Vercel URL (see below)
-
-The API works immediately with synthetic fallback data (`is_trained=false`).
-To serve real predictions, run `uv run python src/models/train_all.py` locally
-and upload the `data/models/` directory to Render's persistent disk, or
-re-train on the server after attaching a disk.
-
-### Frontend → Vercel
-
-1. Go to [vercel.com](https://vercel.com) → Add New Project → Import your repo
-2. Set **Root Directory** to `dashboard`
-3. Framework preset: **Vite** (auto-detected)
-4. Add environment variable: `VITE_API_URL` = your Render service URL
-5. Click **Deploy**
-
-The `dashboard/vercel.json` handles SPA routing so deep links don't 404.
-
-### CORS
-
-Once both are deployed, set `ALLOWED_ORIGINS` on Render to your Vercel URL:
-
-```
-ALLOWED_ORIGINS=https://your-project.vercel.app
-```
-
----
-
-## Stack
-
-| Layer | Technology |
-|-------|------------|
-| Language | Python 3.12+ |
-| Package manager | uv |
-| Linting / formatting | Ruff |
-| Testing | pytest + hypothesis (Python) · Vitest + RTL (frontend) |
-| Dependency audit | pip-audit |
-| Data processing | pandas, numpy |
-| Spatial / gridded data | xarray, geopandas, regionmask |
-| ML | scikit-learn, xgboost |
-| API | FastAPI + Pydantic |
-| Dashboard | React 18 + TypeScript + Deck.gl + Recharts |
-| CI/CD | GitHub Actions |
-
----
-
-## Getting Started
-
-**Prerequisites:** Python 3.12+, [uv](https://docs.astral.sh/uv/), Node 18+
+### Run locally
 
 ```bash
-# Python — install dependencies and run tests
+# 1. Install Python dependencies
 uv sync --group dev
+
+# 2. Run tests
 uv run pytest
 uv run ruff check .
 
-# Train the ML models (requires master_panel.parquet)
-uv run python src/models/train_all.py
+# 3. Train the ML models (requires data/processed/master_panel.parquet)
+#    Sets PYTHONPATH so src.api is importable — needed on Windows PowerShell
+$env:PYTHONPATH = "."; python src/models/train_all.py   # PowerShell
+PYTHONPATH=. python src/models/train_all.py             # bash/zsh
 
-# Run the API
-uv run uvicorn src.api.main:app --reload --port 8000
+# 4. Start the API (port 8000)
+python -m uvicorn src.api.main:app --reload --port 8000
 
-# Frontend — install dependencies and run dev server
+# 5. Start the dashboard (port 5173)
 cd dashboard
 npm install
 npm run dev       # → http://localhost:5173
-npm test          # Vitest + RTL
+npm test          # Vitest + React Testing Library
 ```
+
+> **Note on `uv` availability:** If `uv` is not on your PATH, activate the `.venv`
+> environment directly (`source .venv/bin/activate` or `.venv\Scripts\Activate.ps1`)
+> and use `python` directly.
+
+### Update the static data files
+
+The dashboard reads pre-generated JSON files from `dashboard/public/data/`.
+Regenerate them whenever the Master Panel or trained models change:
+
+```bash
+# PowerShell
+$env:PYTHONPATH = "."; python scripts/generate_static.py
+
+# bash/zsh
+PYTHONPATH=. python scripts/generate_static.py
+```
+
+Then commit the updated files and push — GitHub Actions redeploys automatically.
+
+---
+
+## Deployment
+
+The dashboard is deployed as a **fully static site** on GitHub Pages — no backend
+required at runtime. All API responses are pre-generated as JSON files.
+
+### GitHub Pages (live)
+
+Deployed automatically on every push to `main` via `.github/workflows/deploy-pages.yml`.
+
+**One-time setup** (already done for this repo):
+1. GitHub → Settings → Pages → Source → **GitHub Actions**
+2. Push to `main` — the workflow builds the React app and deploys
+
+Live URL: `https://mtgiguere.github.io/global_freshwater_intelligence_project/`
+
+### Custom domain
+
+To serve from a custom domain (e.g. `gfip.yourorg.org`):
+1. Add a `dashboard/public/CNAME` file containing just the domain
+2. Remove or clear the `VITE_BASE_PATH` env var in the deploy workflow
+3. Configure the domain in GitHub Settings → Pages
+
+### Live API (future)
+
+If you want real-time predictions or a live data feed:
+
+1. Deploy `src/api/` to [Render](https://render.com), [Railway](https://railway.app), or [Fly.io](https://fly.io)
+2. Set `VITE_API_URL=https://your-api.onrender.com` in the Vercel/GitHub Actions build env
+3. Schedule a Lambda or GitHub Actions cron to re-run the pipeline and `train_all.py`
+   when new source data is available (AQUASTAT updates annually, World Bank quarterly)
+
+The FastAPI backend is production-ready and the frontend switches modes via a single
+env var — no code changes needed.
 
 ---
 
@@ -234,26 +161,30 @@ npm test          # Vitest + RTL
 ```
 gfip/
   data/
-    raw/          # Immutable original downloads — gitignored, store in S3/DVC
-    interim/      # Cleaned individual datasets
-    processed/    # master_panel.parquet
-    models/       # Trained model files (generated by train_all.py, gitignored)
+    raw/          # Immutable original downloads (gitignored — use S3/DVC)
+    interim/      # Cleaned individual source datasets
+    processed/    # master_panel.parquet (gitignored)
+    models/       # Trained .joblib files (gitignored — generated by train_all.py)
     external/     # Shapefiles, lookup tables
-  analysis/       # R — Phase 3 hypothesis testing
+  analysis/       # R — Phase 3 hypothesis testing (H1–H7)
   docs/
     TDD_CONTRACT.md
     GFIP_Master_Documentation_v1.0.docx
   notebooks/      # Jupyter EDA (Phase 2)
+  scripts/
+    generate_static.py   # Pre-generates JSON for GitHub Pages deployment
   src/
     ingest/       # One module per data source (Phase 1)
-    pipeline/     # master_panel + validate + assemble (Phase 1)
-    models/       # ML training and evaluation (Phase 4) + train_all.py
-    api/          # FastAPI application (Phase 5)
-  dashboard/      # React + TypeScript frontend (Phase 5)
-  tests/          # Mirrors src/ — one test module per source module
+    pipeline/     # master_panel.py + validate.py (Phase 1)
+    models/       # ML training + evaluation (Phase 4) + train_all.py
+    api/          # FastAPI application (Phase 4–5)
+  dashboard/      # React 18 + TypeScript frontend (Phase 5)
+    public/data/  # Pre-generated static JSON (committed, served by GitHub Pages)
+  tests/          # Mirrors src/ — one test file per source module
   .github/
     workflows/
-      ci.yml      # Lint + vulnerability scan + test coverage
+      ci.yml            # Lint + security + coverage gates (every PR)
+      deploy-pages.yml  # Static build + GitHub Pages deploy (every push to main)
 ```
 
 ---
@@ -261,10 +192,44 @@ gfip/
 ## Data Sources
 
 All data is standardised to ISO 3166-1 alpha-3 country codes and constant 2015 USD.
-The Master Panel is a single country-year dataset joining all sources on `[iso3, year]`.
+The Master Panel joins all sources on `[iso3, year]` using an outer join (so no country
+is dropped for missing a single source).
 
-Sources: FAO AQUASTAT, NASA GRACE/GRACE-FO, World Bank Open Data, Fund for Peace FSI,
-UCDP, ACLED, UNODC, WHO/GHDx, UNHCR/IOM, UN DESA.
+| Source | Organisation | Coverage |
+|--------|-------------|---------|
+| AQUASTAT | FAO | Freshwater resources, withdrawal by sector |
+| GRACE/GRACE-FO | NASA | Terrestrial water storage anomalies (groundwater proxy) |
+| World Bank Open Data | World Bank | GDP, HDI, Gini, safe water access |
+| Fragile States Index | Fund for Peace | State fragility (12 indicators) |
+| UCDP | Uppsala University | Armed conflict (≥25 battle deaths/year) |
+| ACLED | ACLED | Conflict events and fatalities |
+| UNODC | UN | Homicide rates |
+| GHDx | IHME / WHO | Life expectancy, under-5 mortality, disease burden |
+| UNHCR | UNHCR / IOM | Refugee outflow, IDPs, asylum applications |
+| UN DESA | United Nations | Population (total, urban, rural) |
+
+---
+
+## Engineering Standards
+
+Strict TDD and CI/CD from day one. Read [`docs/TDD_CONTRACT.md`](docs/TDD_CONTRACT.md)
+before writing any `src/` code — it documents real bugs from skipping TDD and explains
+the one-test-at-a-time discipline this project follows.
+
+### CI Gates (every pull request)
+
+| Gate | Tool | Threshold |
+|------|------|-----------|
+| Linting | Ruff | Zero violations |
+| Vulnerability scan | pip-audit | No known CVEs |
+| Test coverage | pytest-cov | ≥ 90% |
+
+### Commit convention
+
+Describe the behaviour added or fixed, not the code written:
+- `add: aquastat ingest validates iso3 codes before joining` — good
+- `fix: global_risk returns per-country latest FSI year, not global max` — good
+- `add: implement parse_aquastat()` — bad (describes code, not behaviour)
 
 ---
 
