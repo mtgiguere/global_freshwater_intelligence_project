@@ -109,10 +109,10 @@ def main() -> None:
     print(f"\nDone in {elapsed:.1f}s")
     print(f"  {detail_ok}/{len(iso3_list)} country detail files")
     print(f"  {predict_ok}/{len(iso3_list)} prediction files")
-    print(f"\nNext steps:")
-    print(f"  git add dashboard/public/data/")
-    print(f"  git commit -m 'data: regenerate static JSON'")
-    print(f"  git push")
+    print("\nNext steps:")
+    print("  git add dashboard/public/data/")
+    print("  git commit -m 'data: regenerate static JSON'")
+    print("  git push")
 
 
 if __name__ == "__main__":
