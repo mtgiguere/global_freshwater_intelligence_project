@@ -92,6 +92,11 @@ export default function GlobalWaterAtlas({
     filled: true,
     stroked: true,
     lineWidthMinPixels: 0.5,
+    // wrapLongitude splits polygons that cross the ±180° antimeridian before
+    // rendering. Without this, Russia (spans ~30°E–190°E), Fiji, and Kiribati
+    // produce giant triangles or horizontal streaks across the entire map width
+    // because their GeoJSON coordinates are not clipped to [-180, 180].
+    wrapLongitude: true,
     // GeoJsonLayer fill colour callback — called once per country feature per frame.
     //
     // The world-atlas shapefile identifies countries by ISO 3166-1 *numeric* code
