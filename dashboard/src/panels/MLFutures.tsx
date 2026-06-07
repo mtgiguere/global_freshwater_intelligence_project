@@ -55,7 +55,7 @@ const MODELS: Array<{
 }> = [
   {
     key: "scarcity_score",
-    label: "Model 1 — Water Scarcity Forecaster",
+    label: "Water Scarcity Forecast",
     method: "Gradient Boosting Regression",
     predicts: "log(freshwater per capita) 5 years ahead",
     color: "#1565c0",
@@ -81,7 +81,7 @@ const MODELS: Array<{
   },
   {
     key: "instability_probability",
-    label: "Model 2 — Instability Risk Predictor",
+    label: "Political Instability Forecast",
     method: "XGBoost Binary Classifier",
     predicts: "P(FSI jump >5 pts OR new conflict within 3 years)",
     color: "#b71c1c",
@@ -109,7 +109,7 @@ const MODELS: Array<{
   },
   {
     key: "migration_score",
-    label: "Model 3 — Migration Pressure Estimator",
+    label: "Displacement Pressure Forecast",
     method: "Random Forest Regression",
     predicts: "log(refugee outflow + 1)",
     color: "#e65100",
@@ -211,7 +211,7 @@ export default function MLFutures({ iso3 }: { iso3: string }) {
 
   return (
     <div style={{ maxWidth: 800 }}>
-      <h2>ML Futures — Forward-Looking Risk Forecasts for {iso3}</h2>
+      <h2>Risk Forecast — {prediction?.country_name ?? iso3}</h2>
       <p style={{ color: "#555", marginBottom: 16, lineHeight: 1.6 }}>
         These scores are produced by three independent machine learning models trained on the
         GFIP Master Panel — 274 countries, 1960–2022. Each model was built to answer a specific
@@ -283,25 +283,22 @@ export default function MLFutures({ iso3 }: { iso3: string }) {
                   key={m.key}
                   style={{ border: `2px solid ${m.color}`, borderRadius: 8, padding: 16 }}
                 >
-                  <h3 style={{ margin: "0 0 4px", color: m.color }}>{m.label}</h3>
-                  <div style={{ display: "flex", gap: 16, fontSize: 12, color: "#777", marginBottom: 6 }}>
-                    <span><strong>Method:</strong> {m.method}</span>
-                    <span><strong>Output:</strong> {m.predicts}</span>
-                  </div>
+                  <h3 style={{ margin: "0 0 8px", color: m.color }}>{m.label}</h3>
                   <ScoreBar value={score} color={m.color} />
-                  <div style={{ fontSize: 14, fontWeight: 600, color: m.color, marginBottom: 10 }}>
-                    Score: {(score * 100).toFixed(1)}%
-                  </div>
-                  {/* Score interpretation — plain language verdict for this specific value */}
-                  <p style={{ margin: "0 0 10px", fontSize: 13, color: "#333",
+                  {/* Plain-language verdict — the so-what, shown immediately after the bar */}
+                  <p style={{ margin: "8px 0 10px", fontSize: 14, color: "#1a1a1a",
                     background: "#fafafa", padding: "8px 10px", borderRadius: 4, lineHeight: 1.6 }}>
                     {m.interpret(score)}
                   </p>
+                  {/* Method and technical detail — for researchers, tucked away */}
                   <details style={{ fontSize: 13 }}>
                     <summary style={{ cursor: "pointer", color: "#1a3a5c", fontWeight: 600 }}>
-                      How does this model work? — expand
+                      How does this model work?
                     </summary>
                     <div style={{ marginTop: 8, paddingLeft: 12, borderLeft: `3px solid ${m.color}` }}>
+                      <p style={{ margin: "0 0 6px", color: "#666", fontSize: 12 }}>
+                        <strong>Method:</strong> {m.method} · <strong>Output:</strong> {m.predicts}
+                      </p>
                       <p style={{ margin: "0 0 8px", color: "#444", lineHeight: 1.6 }}>
                         <strong>Why we built it:</strong> {m.why}
                       </p>

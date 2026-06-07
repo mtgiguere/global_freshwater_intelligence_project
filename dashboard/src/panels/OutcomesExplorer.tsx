@@ -412,74 +412,88 @@ export default function OutcomesExplorer({ iso3 }: { iso3: string }) {
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {hypotheses.map(h => (
-          <div key={h.id} style={{
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            padding: 16,
-            // Green border = confirmed (p < 0.05, correct sign).
-            // Amber border = directionally consistent but not yet significant.
-            borderLeft: `4px solid ${h.confirmed ? "#2e7d32" : "#e65100"}`,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-              <span style={{ fontWeight: 700, fontSize: 18, color: "#1a3a5c" }}>{h.id}</span>
-              <span style={{ fontWeight: 500 }}>{h.label}</span>
-              <span style={{
-                marginLeft: "auto",
-                background: h.confirmed ? "#e8f5e9" : "#fff3e0",
-                color: h.confirmed ? "#2e7d32" : "#e65100",
-                borderRadius: 4, padding: "2px 10px", fontSize: 12,
-              }}>
-                {h.confirmed ? "Confirmed" : "Directional"}
-              </span>
-            </div>
+        {hypotheses.map(h => {
+          const desc = DESCRIPTIONS[h.id];
+          return (
+            <div key={h.id} style={{
+              border: "1px solid #ddd",
+              borderRadius: 8,
+              padding: 16,
+              // Green border = confirmed (p < 0.05, correct sign).
+              // Amber border = directionally consistent but not yet significant.
+              borderLeft: `4px solid ${h.confirmed ? "#2e7d32" : "#e65100"}`,
+            }}>
+              {/* Header row */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                <span style={{ fontWeight: 700, fontSize: 18, color: "#1a3a5c" }}>{h.id}</span>
+                <span style={{ fontWeight: 500 }}>{h.label}</span>
+                <span style={{
+                  marginLeft: "auto",
+                  background: h.confirmed ? "#e8f5e9" : "#fff3e0",
+                  color: h.confirmed ? "#2e7d32" : "#e65100",
+                  borderRadius: 4, padding: "2px 10px", fontSize: 12,
+                }}>
+                  {h.confirmed ? "Confirmed" : "Directional"}
+                </span>
+              </div>
 
-            {/* β (beta) is the key number — it tells you HOW MUCH the outcome changes
-                per unit of exposure, not just whether a relationship exists. */}
-            <div style={{ display: "flex", gap: 24, marginBottom: 8, fontSize: 14, color: "#555" }}>
-              <span><strong>β</strong> = {h.beta.toFixed(3)}</span>
-              <span><strong>p</strong> = {h.p_value.toFixed(4)}</span>
-              <span><strong>n</strong> = {h.n_obs.toLocaleString()}</span>
-            </div>
-            <p style={{ margin: 0, fontSize: 14, color: "#333" }}>{interpret(h)}</p>
-            {h.note && (
-              <p style={{ margin: "8px 0 0", fontSize: 12, color: "#888", fontStyle: "italic" }}>
-                {h.note}
-              </p>
-            )}
+              {/* Lead finding — the most important sentence, always visible.
+                  A policymaker should understand the key takeaway without
+                  opening any expandable section. */}
+              {desc && (
+                <p style={{ margin: "0 0 10px", fontSize: 15, color: "#1a1a1a", lineHeight: 1.6, fontWeight: 400 }}>
+                  {desc.insight}
+                </p>
+              )}
 
-            {/* Country spotlight — shows where the selected country sits on this hypothesis */}
-            {countryTs.length > 0 && HYPOTHESIS_VARS[h.id] && (
-              <CountrySpotlight
-                countryName={countryName}
-                ts={countryTs}
-                vars={HYPOTHESIS_VARS[h.id]}
-              />
-            )}
+              {/* Country spotlight — shown immediately after the finding so the
+                  reader can connect the global result to a specific country */}
+              {countryTs.length > 0 && HYPOTHESIS_VARS[h.id] && (
+                <CountrySpotlight
+                  countryName={countryName}
+                  ts={countryTs}
+                  vars={HYPOTHESIS_VARS[h.id]}
+                />
+              )}
 
-            {/* Extended plain-language context — written for policymakers and journalists */}
-            {DESCRIPTIONS[h.id] && (
+              {/* Statistics and methodology — tucked away for those who want them.
+                  The β coefficient, p-value, and n are for researchers; the policymaker
+                  has already got the finding above. */}
               <details style={{ marginTop: 12 }}>
                 <summary style={{ cursor: "pointer", fontSize: 13, color: "#1a3a5c", fontWeight: 600 }}>
-                  Why does this matter? — read more
+                  See the statistics & methodology
                 </summary>
                 <div style={{ marginTop: 10, paddingLeft: 12, borderLeft: "3px solid #e0e0e0" }}>
-                  <p style={{ margin: "0 0 8px", fontSize: 13, color: "#444", lineHeight: 1.6 }}>
-                    <strong>The theory:</strong> {DESCRIPTIONS[h.id].why}
-                  </p>
-                  <p style={{ margin: "0 0 8px", fontSize: 13, color: "#444", lineHeight: 1.6 }}>
-                    <strong>What we found:</strong> {DESCRIPTIONS[h.id].insight}
-                  </p>
-                  {DESCRIPTIONS[h.id].limitation && (
-                    <p style={{ margin: 0, fontSize: 12, color: "#888", fontStyle: "italic", lineHeight: 1.5 }}>
-                      ⚠ Data caveat: {DESCRIPTIONS[h.id].limitation}
+                  {/* β (beta) is the key number — it tells you HOW MUCH the outcome
+                      changes per unit of exposure, not just whether a relationship exists. */}
+                  <div style={{ display: "flex", gap: 24, marginBottom: 8, fontSize: 14, color: "#555" }}>
+                    <span><strong>β</strong> = {h.beta.toFixed(3)}</span>
+                    <span><strong>p</strong> = {h.p_value.toFixed(4)}</span>
+                    <span><strong>n</strong> = {h.n_obs.toLocaleString()} country-years</span>
+                  </div>
+                  <p style={{ margin: "0 0 8px", fontSize: 13, color: "#444" }}>{interpret(h)}</p>
+                  {h.note && (
+                    <p style={{ margin: "0 0 8px", fontSize: 12, color: "#888", fontStyle: "italic" }}>
+                      {h.note}
                     </p>
+                  )}
+                  {desc && (
+                    <>
+                      <p style={{ margin: "8px 0 6px", fontSize: 13, color: "#444", lineHeight: 1.6 }}>
+                        <strong>Why this hypothesis?</strong> {desc.why}
+                      </p>
+                      {desc.limitation && (
+                        <p style={{ margin: 0, fontSize: 12, color: "#888", fontStyle: "italic", lineHeight: 1.5 }}>
+                          ⚠ Data caveat: {desc.limitation}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               </details>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
