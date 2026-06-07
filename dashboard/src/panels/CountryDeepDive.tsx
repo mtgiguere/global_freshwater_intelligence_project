@@ -132,8 +132,8 @@ export default function CountryDeepDive({ iso3 }: { iso3: string }) {
                 <XAxis dataKey="year" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} width={60} />
                 <Tooltip
-                  formatter={(value: number | null) =>
-                    value === null ? 'No data' : value.toLocaleString()
+                  formatter={(value) =>
+                    value == null ? 'No data' : Number(value).toLocaleString()
                   }
                 />
                 <Line
