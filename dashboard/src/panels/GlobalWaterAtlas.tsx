@@ -178,7 +178,7 @@ export default function GlobalWaterAtlas({
           initialViewState={INITIAL_VIEW_STATE}
           controller={true}
           layers={[layer]}
-          style={{ position: 'absolute', inset: 0 }}
+          style={{ position: 'absolute', inset: '0' }}
         />
       </div>
 
