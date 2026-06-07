@@ -141,7 +141,7 @@ export default function App() {
             onNavigate={(panel) => setActive(panel)}
           />
         )}
-          {active === "outcomes" && <OutcomesExplorer />}
+          {active === "outcomes" && <OutcomesExplorer iso3={country} />}
           {active === "country"  && <CountryDeepDive key={country} iso3={country} />}
           {active === "futures"  && <MLFutures iso3={country} />}
         </PanelErrorBoundary>

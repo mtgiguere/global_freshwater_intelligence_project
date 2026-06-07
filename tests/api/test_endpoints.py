@@ -134,8 +134,16 @@ def test_predict_country_returns_200_with_neutral_fallback_for_unknown_iso3():
     50/50/50 placeholder rather than 404.  The user may have just clicked any
     country on the map; a graceful response with is_trained=False is more useful
     than an error.  404 is reserved for the real-data path when the country is
-    genuinely absent from the Master Panel."""
-    response = client.get("/api/v1/predict/UGA")
+    genuinely absent from the Master Panel.
+
+    We mock _load_panel and _load_models to None so this test exercises the
+    synthetic path regardless of whether train_all.py has been run locally.
+    """
+    with (
+        patch("src.api.main._load_panel", return_value=None),
+        patch("src.api.main._load_models", return_value=None),
+    ):
+        response = client.get("/api/v1/predict/UGA")
     assert response.status_code == 200
     data = response.json()
     assert data["iso3"] == "UGA"
@@ -175,8 +183,15 @@ def test_predict_country_is_trained_is_false_without_model_file():
 
     The dashboard uses this flag to display a 'no trained model' caveat
     so users know the scores are illustrative, not real forecasts.
+
+    We mock _load_panel and _load_models to None so this test exercises the
+    synthetic path even after train_all.py has been run locally.
     """
-    data = client.get("/api/v1/predict/USA").json()
+    with (
+        patch("src.api.main._load_panel", return_value=None),
+        patch("src.api.main._load_models", return_value=None),
+    ):
+        data = client.get("/api/v1/predict/USA").json()
     assert data["is_trained"] is False
 
 
