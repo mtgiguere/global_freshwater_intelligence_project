@@ -292,19 +292,29 @@ def global_risk() -> list[CountryRisk]:
             CountryRisk(iso3="IND", country_name="India", year=2023, compound_risk_score=55.3),
         ]
 
-    latest_year = int(panel["year"].max())
-    latest = panel[panel["year"] == latest_year].copy()
+    # For the globe colour map we use the FSI score as a proxy CRS until the real
+    # ML models are trained (see train_all.py).  The key issue: panel["year"].max()
+    # may return a year beyond FSI coverage (~2022), giving NaN for every country
+    # and collapsing all scores to the default 50.0 — turning the globe uniformly
+    # orange.  Fix: per country, use the most recent year where FSI is non-null.
+    # Countries with no FSI data at all simply won't appear in `fsi_rows` and will
+    # render as grey on the globe, which is the correct "no data" signal.
+    fsi_rows = (
+        panel[panel["fsi_score"].notna()]
+        .sort_values("year")
+        .drop_duplicates("iso3", keep="last")
+    )
+    # If somehow the panel has no FSI data at all, fall back to the global latest year
+    # (scores will default to 50 but at least the globe shows country shapes).
+    latest = fsi_rows if not fsi_rows.empty else panel[
+        panel["year"] == int(panel["year"].max())
+    ].copy()
 
     results = []
     for _, row in latest.iterrows():
-        # FSI proxy for Compound Risk Score — a temporary measure until the real
-        # ML models are trained on real data. The Fragile States Index (FSI) ranges
-        # from 0 (most stable) to 120 (most fragile) and captures many of the same
-        # drivers of risk — governance failure, conflict pressure, economic decline —
-        # that the Phase 4 models predict directly. Dividing by 1.2 maps the 0-120
-        # FSI scale to the 0-100 scale used by the Compound Risk Score.
-        # Once train_all.py has been run and model files exist, the /predict/{iso3}
-        # endpoint provides real CRS values based on ML predictions.
+        # FSI proxy for Compound Risk Score: FSI ranges 0 (stable) to 120 (fragile).
+        # Dividing by 1.2 maps it to the 0-100 CRS scale.
+        # Once train_all.py has been run, /predict/{iso3} provides real ML-based scores.
         fsi = _safe_float(row.get("fsi_score"))
         crs = round(min(fsi / 1.2, 100.0), 1) if fsi is not None else 50.0
         iso3 = str(row["iso3"])
@@ -312,7 +322,7 @@ def global_risk() -> list[CountryRisk]:
             CountryRisk(
                 iso3=iso3,
                 country_name=_country_name(iso3),
-                year=latest_year,
+                year=int(row["year"]),
                 compound_risk_score=crs,
             )
         )

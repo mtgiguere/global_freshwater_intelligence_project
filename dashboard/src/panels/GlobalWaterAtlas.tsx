@@ -36,7 +36,11 @@
 import { useEffect, useState, useMemo } from 'react'
 import DeckGL from '@deck.gl/react'
 import { GeoJsonLayer } from '@deck.gl/layers'
-import { GlobeView } from 'deck.gl'
+// In deck.gl v9, GlobeView became an experimental API and was renamed _GlobeView.
+// It is still fully functional — the underscore prefix is deck.gl's convention for
+// "not yet stable API, may change in a future minor version". We import it from the
+// main deck.gl package which re-exports all experimental views.
+import { _GlobeView as GlobeView } from 'deck.gl'
 import { feature } from 'topojson-client'
 import type { Topology, GeometryCollection } from 'topojson-specification'
 import type { GeoJsonProperties } from 'geojson'
