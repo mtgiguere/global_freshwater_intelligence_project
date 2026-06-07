@@ -49,6 +49,9 @@ const MODELS: Array<{
   method: string;
   predicts: string;
   color: string;
+  why: string;
+  how: string;
+  interpret: (score: number) => string;
 }> = [
   {
     key: "scarcity_score",
@@ -56,6 +59,25 @@ const MODELS: Array<{
     method: "Gradient Boosting Regression",
     predicts: "log(freshwater per capita) 5 years ahead",
     color: "#1565c0",
+    why: `Water scarcity is a slow-moving crisis that often isn't visible until it's
+      too late — aquifers are depleted silently, rivers are over-allocated for
+      decades before they run dry. This model was built to give an early-warning
+      signal: given current trends in population growth, agricultural water use,
+      and groundwater depletion (from GRACE satellites), how much freshwater
+      will this country have per person in five years?`,
+    how: `Trained on the GFIP Master Panel (1960–2022, 274 countries) using
+      Gradient Boosting — a technique that builds hundreds of small decision trees,
+      each correcting the errors of the last. Features include lagged freshwater
+      values (what was the trend?), rolling averages (is it accelerating?),
+      population growth (more people = less water per person), GDP per capita
+      (wealthier countries invest more in water infrastructure), and GRACE
+      groundwater anomalies (is the underground reserve declining?).`,
+    interpret: (s) =>
+      s >= 0.7
+        ? `HIGH RISK (${(s * 100).toFixed(0)}%) — The model forecasts significant water stress. This country is on a trajectory toward serious scarcity, likely driven by population growth, over-extraction, or declining precipitation.`
+        : s >= 0.4
+        ? `MODERATE RISK (${(s * 100).toFixed(0)}%) — Some scarcity pressure is expected. Water availability is tightening but not yet critical. Policy intervention now could prevent deterioration.`
+        : `LOW RISK (${(s * 100).toFixed(0)}%) — The model sees no major scarcity signal in the near term. The country has adequate renewable freshwater relative to its population and usage trajectory.`,
   },
   {
     key: "instability_probability",
@@ -63,6 +85,27 @@ const MODELS: Array<{
     method: "XGBoost Binary Classifier",
     predicts: "P(FSI jump >5 pts OR new conflict within 3 years)",
     color: "#b71c1c",
+    why: `Political instability and armed conflict cause immense human suffering and are
+      extremely costly to reverse. Early warning systems that can flag deteriorating
+      conditions before crisis erupts are one of the most valuable tools in
+      international development and peace-building. This model asks: given everything
+      we know about this country's water stress, economic health, and existing
+      fragility, how likely is it to experience significant political deterioration
+      or the onset of new armed conflict in the next three years?`,
+    how: `Built using XGBoost — the same algorithm used by leading early-warning systems
+      like ACLED's conflict prediction tool. XGBoost handles the high rates of missing
+      data in conflict research, captures non-linear interactions (e.g., water scarcity
+      only increases conflict risk when economic buffers are already weak), and is
+      robust to outliers. The target variable combines two signals: an FSI score jump
+      of more than 5 points (rapid state fragility increase) OR the onset of new armed
+      conflict per UCDP definition. Features include water stress lags, GDP trajectory,
+      existing FSI level, and conflict history.`,
+    interpret: (s) =>
+      s >= 0.6
+        ? `HIGH PROBABILITY (${(s * 100).toFixed(0)}%) — The model assigns a substantial probability to significant political deterioration or conflict onset within 3 years. This is a serious early-warning signal warranting close monitoring and pre-emptive engagement.`
+        : s >= 0.3
+        ? `MODERATE PROBABILITY (${(s * 100).toFixed(0)}%) — Some elevated risk is present. The country has vulnerability factors that could compound under stress. Preventive diplomacy and economic support are most cost-effective at this stage.`
+        : `LOW PROBABILITY (${(s * 100).toFixed(0)}%) — The model sees a relatively stable near-term outlook. Existing institutions and buffers appear adequate to absorb current stresses.`,
   },
   {
     key: "migration_score",
@@ -70,6 +113,27 @@ const MODELS: Array<{
     method: "Random Forest Regression",
     predicts: "log(refugee outflow + 1)",
     color: "#e65100",
+    why: `Forced displacement is one of the most severe humanitarian consequences of
+      combined water stress, economic failure, and political violence. Over 100 million
+      people are currently displaced worldwide — a record high. Understanding which
+      countries are most likely to generate large refugee flows in the coming years
+      helps international agencies pre-position resources, and helps destination
+      countries plan for arrivals. This model links water stress to displacement
+      pressure, completing the GFIP causal chain: water → instability → migration.`,
+    how: `Built using Random Forest — an ensemble of decision trees ideal for this
+      problem because refugee data is highly skewed (most country-years produce zero
+      refugees; a few produce millions) and has significant missing values (not all
+      countries report to UNHCR consistently). Random Forest handles both properties
+      well. Features include freshwater stress indicators, conflict events (UCDP/ACLED),
+      FSI fragility scores, economic indicators, and population size. The target is
+      log(refugee outflow + 1), which compresses the extreme skew and is back-
+      transformed to a normalised 0–1 score for display.`,
+    interpret: (s) =>
+      s >= 0.6
+        ? `HIGH PRESSURE (${(s * 100).toFixed(0)}%) — The model forecasts significant forced displacement from this country. Combined water stress, fragility, and conflict indicators are elevated. International protection and resettlement capacity should be planned.`
+        : s >= 0.3
+        ? `MODERATE PRESSURE (${(s * 100).toFixed(0)}%) — Some displacement pressure is forecast. Conditions exist that could drive increased refugee outflow if they deteriorate. Monitoring and early humanitarian pre-positioning are warranted.`
+        : `LOW PRESSURE (${(s * 100).toFixed(0)}%) — The model does not see major forced displacement signals in the near term. The country's combination of water security, economic stability, and governance capacity is currently adequate.`,
   },
 ];
 
@@ -147,7 +211,21 @@ export default function MLFutures({ iso3 }: { iso3: string }) {
 
   return (
     <div style={{ maxWidth: 800 }}>
-      <h2>ML Futures — {iso3}</h2>
+      <h2>ML Futures — Forward-Looking Risk Forecasts for {iso3}</h2>
+      <p style={{ color: "#555", marginBottom: 16, lineHeight: 1.6 }}>
+        These scores are produced by three independent machine learning models trained on the
+        GFIP Master Panel — 274 countries, 1960–2022. Each model was built to answer a specific
+        policy-relevant question about this country's near-term future. The scores are not
+        predictions in the sense of "this will definitely happen" — they are <em>risk signals</em>:
+        the models have learned what patterns preceded past crises and are flagging whether
+        those patterns are present here today.
+      </p>
+      <p style={{ color: "#777", fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
+        Together they feed the <strong>Compound Risk Score</strong> — a single 0–100 index
+        that summarises this country's overall water-related vulnerability.
+        A score above 70 warrants urgent attention; 50–70 calls for active monitoring and
+        preventive investment; below 30 indicates the country has healthy buffers.
+      </p>
 
       {loading && <p>Loading predictions…</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -206,16 +284,32 @@ export default function MLFutures({ iso3 }: { iso3: string }) {
                   style={{ border: `2px solid ${m.color}`, borderRadius: 8, padding: 16 }}
                 >
                   <h3 style={{ margin: "0 0 4px", color: m.color }}>{m.label}</h3>
-                  <p style={{ margin: "0 0 4px", fontSize: 13 }}>
-                    <strong>Method:</strong> {m.method}
-                  </p>
-                  <p style={{ margin: "0 0 8px", fontSize: 13 }}>
-                    <strong>Predicts:</strong> {m.predicts}
-                  </p>
-                  <ScoreBar value={score} color={m.color} />
-                  <div style={{ fontSize: 13, color: "#555" }}>
-                    Score: <strong>{(score * 100).toFixed(1)}%</strong>
+                  <div style={{ display: "flex", gap: 16, fontSize: 12, color: "#777", marginBottom: 6 }}>
+                    <span><strong>Method:</strong> {m.method}</span>
+                    <span><strong>Output:</strong> {m.predicts}</span>
                   </div>
+                  <ScoreBar value={score} color={m.color} />
+                  <div style={{ fontSize: 14, fontWeight: 600, color: m.color, marginBottom: 10 }}>
+                    Score: {(score * 100).toFixed(1)}%
+                  </div>
+                  {/* Score interpretation — plain language verdict for this specific value */}
+                  <p style={{ margin: "0 0 10px", fontSize: 13, color: "#333",
+                    background: "#fafafa", padding: "8px 10px", borderRadius: 4, lineHeight: 1.6 }}>
+                    {m.interpret(score)}
+                  </p>
+                  <details style={{ fontSize: 13 }}>
+                    <summary style={{ cursor: "pointer", color: "#1a3a5c", fontWeight: 600 }}>
+                      How does this model work? — expand
+                    </summary>
+                    <div style={{ marginTop: 8, paddingLeft: 12, borderLeft: `3px solid ${m.color}` }}>
+                      <p style={{ margin: "0 0 8px", color: "#444", lineHeight: 1.6 }}>
+                        <strong>Why we built it:</strong> {m.why}
+                      </p>
+                      <p style={{ margin: 0, color: "#444", lineHeight: 1.6 }}>
+                        <strong>How it works:</strong> {m.how}
+                      </p>
+                    </div>
+                  </details>
                 </div>
               );
             })}

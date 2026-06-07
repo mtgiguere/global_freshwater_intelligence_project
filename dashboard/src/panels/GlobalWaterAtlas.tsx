@@ -1,33 +1,28 @@
 /**
  * Panel 1 — Global Water Atlas
  *
- * This is the landing panel of the GFIP dashboard — a 3D interactive globe
- * rendered using Deck.gl's GlobeView (WebGL). Every country is filled with a
- * colour derived from its Compound Risk Score (CRS, 0–100):
+ * The landing panel of the GFIP dashboard — an interactive flat world map rendered
+ * via Deck.gl's MapView (WebGL). Every country is filled with a colour derived from
+ * its Compound Risk Score (CRS, 0–100):
  *   - Deep red  (≥70): critical water-related vulnerability
  *   - Orange    (50–70): high stress
  *   - Amber     (30–50): elevated but manageable stress
  *   - Green     (<30): healthy water and stability buffers
  *   - Grey:     no data available for this country
  *
- * Clicking a country updates the `selectedIso3` state in App.tsx (via the
- * onCountrySelect callback), which simultaneously updates the CountrySearch input
- * in the navigation bar and, if the user navigates to the Country Deep Dive panel,
- * loads that country's full historical data.
+ * Clicking a country updates `selectedIso3` in App.tsx (via onCountrySelect),
+ * simultaneously updating the CountrySearch input and priming the Country Deep
+ * Dive and ML Futures panels for that country.
  *
- * What this panel tells a reader at a glance:
- *   - Which parts of the world face the greatest water-related risk right now.
- *   - How that stress concentrates geographically — Sub-Saharan Africa, South
- *     Asia, and MENA are consistently the most affected regions.
- *   - Where the groundwater depletion crisis (H7) overlaps with fragility and
- *     poverty — visible as clusters of red/orange in arid regions.
+ * NOTE: We use MapView (flat Mercator projection) instead of GlobeView.
+ * Deck.gl's _GlobeView is an experimental API in v9.x that produces rendering
+ * artefacts: polygon "spiralling" on wrap-around countries, and a visible equator
+ * arc line. MapView is fully stable and shows all countries at once — better for
+ * scanning a data dashboard quickly.
  *
- * TDD note: the Deck.gl GlobeView renders via WebGL, which jsdom cannot
- * simulate. The component's data-fetching lifecycle (loading / loaded states)
- * is covered by component tests in __tests__/GlobalWaterAtlas.test.tsx.
- * The colour-mapping logic (riskColor, buildRiskIndex) is fully TDD'd in
- * src/utils/__tests__/. Visual correctness of the globe is verified in the
- * browser — documented in the PR per the project TDD contract.
+ * TDD note: Deck.gl renders via WebGL, which jsdom cannot simulate. The component's
+ * data-fetching lifecycle is covered in __tests__/GlobalWaterAtlas.test.tsx. The
+ * colour-mapping logic is fully TDD'd in src/utils/__tests__/.
  *
  * Geographic data: Natural Earth 110m countries via world-atlas (npm).
  * Country colours: driven by the /api/v1/global/risk endpoint.
@@ -36,11 +31,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import DeckGL from '@deck.gl/react'
 import { GeoJsonLayer } from '@deck.gl/layers'
-// In deck.gl v9, GlobeView became an experimental API and was renamed _GlobeView.
-// It is still fully functional — the underscore prefix is deck.gl's convention for
-// "not yet stable API, may change in a future minor version". We import it from the
-// main deck.gl package which re-exports all experimental views.
-import { _GlobeView as GlobeView } from 'deck.gl'
+import { MapView } from '@deck.gl/core'
 import { feature } from 'topojson-client'
 import type { Topology, GeometryCollection } from 'topojson-specification'
 import type { GeoJsonProperties } from 'geojson'
@@ -51,15 +42,16 @@ import { riskColor, buildRiskIndex } from '../utils/riskColors'
 import { numericToIso3 } from '../utils/numericToIso3'
 
 // Convert the TopoJSON topology to a GeoJSON FeatureCollection once at module
-// load — this is a pure transform of a static file, so it never needs to run
-// again during the session.
+// load — this is a pure transform of a static file, so it never needs to run again.
 const WORLD_GEOJSON = feature(
   worldAtlas as unknown as Topology,
   (worldAtlas as unknown as Topology<{ countries: GeometryCollection<GeoJsonProperties> }>)
     .objects.countries,
 )
 
-const INITIAL_VIEW_STATE = { longitude: 10, latitude: 20, zoom: 0.8 }
+// Zoom level 1.2 shows the full world with a small margin on all sides.
+// latitude: 15 centres on the populated landmasses rather than the mid-ocean equator.
+const INITIAL_VIEW_STATE = { longitude: 10, latitude: 15, zoom: 1.2 }
 
 const LEGEND: [string, string][] = [
   ['Critical (≥70)', '#c62828'],
@@ -163,7 +155,7 @@ export default function GlobalWaterAtlas({
       {/* Globe container — explicit height required by Deck.gl */}
       <div style={{ position: 'relative', height: 520, borderRadius: 8, overflow: 'hidden' }}>
         <DeckGL
-          views={new GlobeView({ id: 'globe' })}
+          views={new MapView({ id: 'map', repeat: true })}
           initialViewState={INITIAL_VIEW_STATE}
           controller={true}
           layers={[layer]}

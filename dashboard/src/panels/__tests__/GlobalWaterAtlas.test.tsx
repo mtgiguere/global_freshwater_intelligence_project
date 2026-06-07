@@ -20,7 +20,7 @@ vi.mock('@deck.gl/react', () => ({
   default: () => <canvas data-testid="deckgl-canvas" />,
 }))
 vi.mock('@deck.gl/layers', () => ({ GeoJsonLayer: vi.fn() }))
-vi.mock('deck.gl', () => ({ _GlobeView: vi.fn() }))
+vi.mock('@deck.gl/core', () => ({ MapView: vi.fn() }))
 vi.mock('world-atlas/countries-110m.json', () => ({
   default: { type: 'Topology', objects: { countries: { type: 'GeometryCollection', geometries: [] } }, arcs: [] },
 }))

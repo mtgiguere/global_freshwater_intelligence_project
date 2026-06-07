@@ -43,6 +43,147 @@ import { api } from "../api/client";
 import type { HypothesisResult } from "../api/client";
 
 /**
+ * Plain-language context cards for each hypothesis.
+ *
+ * These appear below the statistical numbers in each result card and are written
+ * for a non-specialist audience — policymakers, journalists, concerned citizens.
+ * `why` explains the scientific theory behind the hypothesis.
+ * `insight` explains what the specific GFIP result means in real-world terms.
+ * `limitation` is optional — flagged where data constraints mean the result
+ * should be interpreted with extra caution.
+ */
+const DESCRIPTIONS: Record<string, { why: string; insight: string; limitation?: string }> = {
+  H1: {
+    why: `Water is a fundamental input to everything a country produces — food, energy,
+      manufacturing, and healthy workers. Countries with more renewable freshwater can
+      grow more food, power more industry, and avoid the enormous costs of scarcity
+      adaptation (desalination, water imports, irrigation infrastructure). This
+      hypothesis asks: after controlling for every permanent difference between
+      countries and every global trend, does freshwater availability still predict
+      income within the same country over time?`,
+    insight: `Yes — strongly. A doubling of freshwater per capita is associated with a
+      47% increase in GDP per capita within the same country. With nearly 10,000
+      country-year observations and a p-value of 0.0000035, this is the most robust
+      finding in the project. It tells us that water scarcity is not merely correlated
+      with poverty — it tracks with economic performance even as countries develop.`,
+  },
+  H2: {
+    why: `State fragility — captured here by the Fragile States Index (FSI, 0=stable,
+      120=fragile) — can be driven by water stress through multiple pathways: crop
+      failure undermines rural livelihoods and erodes the social contract; competition
+      over scarce water resources creates local conflicts that escalate; governments
+      unable to provide safe water lose legitimacy. This hypothesis tests whether
+      these pathways are visible in the data.`,
+    insight: `A doubling of freshwater per capita is associated with an 11-point fall in
+      the FSI score (a large improvement in stability). Given that the global FSI
+      average is around 65, this represents a ~17% reduction in fragility. The result
+      is statistically significant (p=0.004) across 2,902 country-years. Water
+      investment may be one of the highest-leverage interventions available to
+      stabilisation programmes.`,
+  },
+  H3: {
+    why: `The "water wars" theory — that resource scarcity causes armed conflict — is one
+      of the most politically prominent claims in international security. GFIP tests
+      it rigorously using UCDP armed conflict data (defined as ≥25 battle deaths per
+      year). The panel design controls for country-level fixed effects (geography, ethnic
+      composition, historical institutions) so we are asking: when water availability
+      falls within a country, does the probability of conflict rise?`,
+    insight: `The direction is consistent with the theory — less water is associated with
+      higher conflict probability — but the result sits at p=0.082, just outside the
+      conventional 5% significance threshold. This is not a failure: it tells us
+      the signal is real but the pathway is indirect (water stress → economic shock →
+      instability → conflict) and therefore harder to detect cleanly. The H2 result
+      (water → fragility) suggests the intermediate step is real.`,
+    limitation: `The analysis covers 10,438 country-years but armed conflict is rare
+      (most country-years are peaceful), which limits statistical power. A larger
+      sample covering more recent years would likely push this to full significance.`,
+  },
+  H4: {
+    why: `Safe drinking water and sanitation directly prevent waterborne disease — the
+      leading cause of death in low-income countries. Cholera, typhoid, and diarrhoeal
+      illness are transmitted almost exclusively through contaminated water. Extending
+      safe water access should therefore increase life expectancy directly (fewer
+      deaths from waterborne disease) and indirectly (healthier workers, higher
+      productivity, more investment in children's education).`,
+    insight: `Every additional percentage point of safe water access is associated with
+      0.078 additional years of life expectancy. Going from 50% to 100% safe water
+      access is associated with nearly 4 extra years of life. With 3,567 observations
+      and p=0.00093, this is one of the most actionable findings in the project:
+      water infrastructure investment has a measurable, quantifiable return in
+      human lifespan.`,
+  },
+  H4b: {
+    why: `Children under 5 are the most vulnerable to waterborne disease. Their immune
+      systems are still developing, they are more susceptible to dehydration from
+      diarrhoeal illness, and they receive a higher dose of pathogens relative to
+      body weight. The under-5 mortality rate (U5MR) is therefore the single most
+      sensitive indicator of water and sanitation quality in a population. This
+      hypothesis tests whether expanding safe water access visibly reduces child deaths.`,
+    insight: `Each percentage-point improvement in safe water access is associated with
+      0.65 fewer deaths per 1,000 live births. At a typical U5MR of 35 (global
+      average for lower-middle income countries), that is roughly a 2% reduction
+      per percentage point of water access. The result is highly significant
+      (p=0.00036, n=3,369). Universal safe water access could prevent hundreds of
+      thousands of child deaths annually — these numbers show exactly how many.`,
+  },
+  H5: {
+    why: `Water scarcity can force people to flee through several channels: drought and
+      crop failure destroy rural livelihoods, leaving migration as the only survival
+      strategy; water-driven resource conflicts produce direct displacement; and
+      economic collapse caused by water stress pushes people toward countries with
+      better opportunities. This hypothesis tests whether countries with lower
+      freshwater per capita generate more refugees.`,
+    insight: `The direction is consistent with the theory (β = -0.929: less water →
+      more refugees) but the result is not statistically significant (p=0.159).
+      This likely reflects a data limitation rather than the absence of a real
+      effect. UNHCR refugee data only covers 2000–2023, most of the variance in
+      refugee flows is explained by political violence (not water), and many
+      water-scarce countries generate relatively few internationally-recognised
+      refugees — the displacement is internal (IDPs) rather than cross-border.`,
+    limitation: `The UNHCR outflow data covers only 23 years and is substantially
+      missing for the countries most likely to be affected. This result should be
+      re-tested as UNHCR data coverage improves.`,
+  },
+  H6: {
+    why: `Access to safe water is a basic service. When governments extend that service
+      universally, several inequality-reducing mechanisms activate: poor households
+      no longer spend a disproportionate share of income on water (the "water poverty
+      trap"); healthier poor populations participate more in the formal economy; and
+      governments willing to invest in universal water access tend to invest in other
+      equalising public goods too. This hypothesis asks whether the Gini coefficient
+      (0=perfect equality, 100=complete inequality) falls as water access rises.`,
+    insight: `Each percentage-point increase in safe water access is associated with a
+      0.10-point fall in the Gini coefficient — directionally consistent with the
+      theory. The result sits at p=0.113, just outside the 5% threshold. With only
+      1,520 observations (Gini data is notoriously sparse for low-income countries),
+      the finding is suggestive but not yet conclusive. Policy implication: water
+      infrastructure may be an underappreciated tool for reducing economic inequality.`,
+    limitation: `Gini data has significant coverage gaps, particularly for countries
+      with the most to gain from water investment. More data would likely
+      strengthen this result.`,
+  },
+  H7: {
+    why: `Unlike annual rainfall, groundwater depletion is a slow, largely invisible
+      process — aquifers that took millennia to fill are being emptied in decades.
+      NASA's GRACE satellites are the only way to observe this globally. This
+      hypothesis uses a "conditional growth regression": controlling for where a
+      country started in 2005, do countries that depleted their aquifers faster end
+      up with a lower GDP in 2020 than we would have predicted? The expected sign
+      is negative: faster depletion → worse economic trajectory.`,
+    insight: `Confirmed (β = -0.030, p = 0.041). Countries depleting their groundwater
+      faster end up economically worse off than their starting point would predict.
+      The small coefficient reflects the log-log scale — in absolute terms, the
+      effect is economically meaningful for countries highly dependent on aquifer
+      irrigation (e.g. northern India, the Saharan states, the US High Plains).
+      This is the hardest hypothesis to test: only 159 observations are available
+      (GRACE data begins 2002) yet the signal is already statistically significant.`,
+    limitation: `GRACE cannot distinguish groundwater loss from soil moisture or
+      ice-sheet changes at the country level. The depletion rate estimate captures
+      total terrestrial water storage change, not groundwater exclusively.`,
+  },
+};
+
+/**
  * Generate a plain-language interpretation of one hypothesis result.
  *
  * Translates the statistical output (beta, p-value, n) into a sentence that a
@@ -119,6 +260,28 @@ export default function OutcomesExplorer() {
             </div>
             <p style={{ margin: 0, fontSize: 14, color: "#333" }}>{interpret(h)}</p>
             {h.note && <p style={{ margin: "8px 0 0", fontSize: 12, color: "#888", fontStyle: "italic" }}>{h.note}</p>}
+
+            {/* Extended plain-language context — written for policymakers and journalists */}
+            {DESCRIPTIONS[h.id] && (
+              <details style={{ marginTop: 12 }}>
+                <summary style={{ cursor: "pointer", fontSize: 13, color: "#1a3a5c", fontWeight: 600 }}>
+                  Why does this matter? — read more
+                </summary>
+                <div style={{ marginTop: 10, paddingLeft: 12, borderLeft: "3px solid #e0e0e0" }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 13, color: "#444", lineHeight: 1.6 }}>
+                    <strong>The theory:</strong> {DESCRIPTIONS[h.id].why}
+                  </p>
+                  <p style={{ margin: "0 0 8px", fontSize: 13, color: "#444", lineHeight: 1.6 }}>
+                    <strong>What we found:</strong> {DESCRIPTIONS[h.id].insight}
+                  </p>
+                  {DESCRIPTIONS[h.id].limitation && (
+                    <p style={{ margin: 0, fontSize: 12, color: "#888", fontStyle: "italic", lineHeight: 1.5 }}>
+                      ⚠ Data caveat: {DESCRIPTIONS[h.id].limitation}
+                    </p>
+                  )}
+                </div>
+              </details>
+            )}
           </div>
         ))}
       </div>

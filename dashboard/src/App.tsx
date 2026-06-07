@@ -115,7 +115,7 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", margin: 0 }}>
-      <header style={{ background: "#1a3a5c", color: "white", padding: "12px 24px", display: "flex", alignItems: "center", gap: 24 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#1a3a5c", color: "white", padding: "12px 24px", display: "flex", alignItems: "center", gap: 24 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 18 }}>Global Freshwater Intelligence Project</h1>
           <p style={{ margin: 0, fontSize: 12, opacity: 0.7 }}>Water · Stability · Human Welfare · 274 Countries · 1946–2025</p>
