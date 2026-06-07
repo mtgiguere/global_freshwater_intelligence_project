@@ -459,17 +459,34 @@ def predict_country(iso3: str) -> CountryPrediction:
     and returns is_trained=True.
 
     In CI and environments without the parquet/model files, returns synthetic
-    hardcoded data for AFG/FRA/IND/USA/NGA with is_trained=False so the
-    dashboard can display an appropriate caveat.
+    data with is_trained=False. Five reference countries (AFG/FRA/IND/USA/NGA)
+    get illustrative differentiated scores; every other valid ISO3 code gets a
+    neutral 50/50/50 placeholder — never a 404, because the user just clicked
+    a country on the map and deserves a response with a clear "not trained" caveat.
     """
     iso3 = iso3.upper()
     panel = _load_panel()
     models = _load_models()
 
     if panel is None or models is None:
+        # Return a hardcoded synthetic prediction for the five reference countries,
+        # or a neutral 50/50/50 placeholder for any other valid ISO3 code.
+        # We never return 404 in synthetic mode — the user has just clicked a country
+        # on the map and deserves a response. The is_trained=False flag and the
+        # dashboard warning banner communicate clearly that these are not real forecasts.
+        # 404 is reserved for the real-data path (country not in the Master Panel).
         prediction = _SYNTHETIC_PREDICTIONS.get(iso3)
         if prediction is None:
-            raise HTTPException(status_code=404, detail=f"Country {iso3} not found")
+            prediction = CountryPrediction(
+                iso3=iso3,
+                country_name=_country_name(iso3),
+                year=2025,
+                scarcity_score=0.50,
+                instability_probability=0.50,
+                migration_score=0.50,
+                compound_risk_score=50.0,
+                is_trained=False,
+            )
         return prediction
 
     # Real model path — panel and all three model files are present.
