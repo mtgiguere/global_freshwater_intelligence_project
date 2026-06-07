@@ -1,0 +1,10 @@
+{
+  "iso3": "FRA",
+  "country_name": "France",
+  "year": 2026,
+  "scarcity_score": 0.366,
+  "instability_probability": 0.3984,
+  "migration_score": 0.415,
+  "compound_risk_score": 39.5,
+  "is_trained": true
+}

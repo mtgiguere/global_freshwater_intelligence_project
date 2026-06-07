@@ -1,0 +1,10 @@
+{
+  "iso3": "PRK",
+  "country_name": "Korea, Democratic People's Republic of",
+  "year": 2026,
+  "scarcity_score": 0.3608,
+  "instability_probability": 0.3984,
+  "migration_score": 0.415,
+  "compound_risk_score": 39.3,
+  "is_trained": true
+}

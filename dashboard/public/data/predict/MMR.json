@@ -1,0 +1,10 @@
+{
+  "iso3": "MMR",
+  "country_name": "Myanmar",
+  "year": 2026,
+  "scarcity_score": 0.3479,
+  "instability_probability": 0.271,
+  "migration_score": 0.415,
+  "compound_risk_score": 34.5,
+  "is_trained": true
+}

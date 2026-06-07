@@ -1,0 +1,10 @@
+{
+  "iso3": "KGZ",
+  "country_name": "Kyrgyzstan",
+  "year": 2026,
+  "scarcity_score": 0.357,
+  "instability_probability": 0.7717,
+  "migration_score": 0.415,
+  "compound_risk_score": 52.2,
+  "is_trained": true
+}

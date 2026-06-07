@@ -1,0 +1,10 @@
+{
+  "iso3": "SYR",
+  "country_name": "Syrian Arab Republic",
+  "year": 2026,
+  "scarcity_score": 0.357,
+  "instability_probability": 0.5824,
+  "migration_score": 0.415,
+  "compound_risk_score": 45.6,
+  "is_trained": true
+}

@@ -17,14 +17,24 @@
  */
 
 /**
- * VITE_API_URL: Vite exposes environment variables prefixed with VITE_ to the
- * frontend bundle at build time via import.meta.env. In local development this
- * defaults to http://localhost:8000 (the FastAPI server started by uvicorn).
- * In production the Vercel build sets VITE_API_URL to the Render deployment URL,
- * e.g. https://gfip-api.onrender.com. This single constant is the only place in
- * the codebase that needs to change between environments.
+ * DEPLOYMENT MODES
+ *
+ * VITE_API_URL set (local dev or live API deployment):
+ *   All requests go to the FastAPI server at that URL.
+ *   e.g. VITE_API_URL=http://localhost:8000 for local development.
+ *
+ * VITE_API_URL not set (GitHub Pages / static deployment):
+ *   Requests are rewritten to pre-generated JSON files under /data/.
+ *   Run `python scripts/generate_static.py` to produce these files,
+ *   then commit them before deploying. No backend required.
+ *
+ * Switching between modes requires only the VITE_API_URL env var —
+ * no component code changes.
  */
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const BASE_URL = import.meta.env.VITE_API_URL ?? null;
+
+/** True when building for static/GitHub Pages deployment (no live API). */
+const STATIC = BASE_URL === null;
 
 /**
  * The Compound Risk Score for a single country, as returned by GET /api/v1/global/risk.
@@ -169,14 +179,19 @@ export interface CountryPrediction {
 /**
  * Generic typed HTTP GET helper. All methods on the `api` object delegate here.
  *
- * @param path - API path relative to BASE_URL, e.g. "/api/v1/global/risk".
+ * In static mode (VITE_API_URL not set), the caller passes the pre-generated
+ * JSON file path directly. In live mode, it passes the API endpoint path which
+ * is prefixed with BASE_URL.
+ *
+ * @param path - URL path to fetch. Static mode: /data/... Live mode: /api/v1/...
  * @returns A Promise resolving to the JSON response body, typed as T.
  * @throws Error with a descriptive message if the HTTP response status is not 2xx.
  */
 async function get<T>(path: string): Promise<T> {
-  const response = await fetch(`${BASE_URL}${path}`);
+  const url = STATIC ? path : `${BASE_URL}${path}`;
+  const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${path}`);
+    throw new Error(`API error ${response.status}: ${url}`);
   }
   return response.json() as Promise<T>;
 }
@@ -191,36 +206,45 @@ async function get<T>(path: string): Promise<T> {
 export const api = {
   /**
    * Fetches the Compound Risk Score for all countries.
-   * Calls GET /api/v1/global/risk.
-   * Used by: GlobalWaterAtlas (globe colours), App.tsx (CountrySearch autocomplete).
+   * Live: GET /api/v1/global/risk
+   * Static: /data/global-risk.json
    */
-  globalRisk: () => get<CountryRisk[]>("/api/v1/global/risk"),
+  globalRisk: () =>
+    get<CountryRisk[]>(STATIC ? "/data/global-risk.json" : "/api/v1/global/risk"),
 
   /**
    * Fetches the full Master Panel time-series for one country.
-   * Calls GET /api/v1/country/{iso3}.
-   * Used by: CountryDeepDive panel.
+   * Live: GET /api/v1/country/{iso3}
+   * Static: /data/country/{ISO3}.json
    *
    * @param iso3 - ISO 3166-1 alpha-3 country code, e.g. "KEN".
    */
   countryDetail: (iso3: string) =>
-    get<CountryDetail>(`/api/v1/country/${iso3}`),
+    get<CountryDetail>(
+      STATIC
+        ? `/data/country/${iso3.toUpperCase()}.json`
+        : `/api/v1/country/${iso3}`
+    ),
 
   /**
    * Fetches the Phase 3 hypothesis testing results (H1–H7).
-   * Calls GET /api/v1/hypotheses.
-   * Used by: OutcomesExplorer panel.
+   * Live: GET /api/v1/hypotheses
+   * Static: /data/hypotheses.json
    */
-  hypotheses: () => get<HypothesisResult[]>("/api/v1/hypotheses"),
+  hypotheses: () =>
+    get<HypothesisResult[]>(STATIC ? "/data/hypotheses.json" : "/api/v1/hypotheses"),
 
   /**
    * Fetches Phase 4 ML model predictions for one country.
-   * Calls GET /api/v1/predict/{iso3}.
-   * Used by: MLFutures panel.
+   * Live: GET /api/v1/predict/{iso3}
+   * Static: /data/predict/{ISO3}.json
    *
    * @param iso3 - ISO 3166-1 alpha-3 country code, e.g. "SDN".
-   * @throws Error if the country code is not recognised by the API.
    */
   predictCountry: (iso3: string) =>
-    get<CountryPrediction>(`/api/v1/predict/${iso3}`),
+    get<CountryPrediction>(
+      STATIC
+        ? `/data/predict/${iso3.toUpperCase()}.json`
+        : `/api/v1/predict/${iso3}`
+    ),
 };

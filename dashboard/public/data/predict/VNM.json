@@ -1,0 +1,10 @@
+{
+  "iso3": "VNM",
+  "country_name": "Viet Nam",
+  "year": 2026,
+  "scarcity_score": 0.3255,
+  "instability_probability": 0.4605,
+  "migration_score": 0.415,
+  "compound_risk_score": 40.4,
+  "is_trained": true
+}

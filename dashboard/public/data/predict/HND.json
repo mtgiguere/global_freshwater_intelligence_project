@@ -1,0 +1,10 @@
+{
+  "iso3": "HND",
+  "country_name": "Honduras",
+  "year": 2026,
+  "scarcity_score": 0.3479,
+  "instability_probability": 0.4497,
+  "migration_score": 0.415,
+  "compound_risk_score": 40.7,
+  "is_trained": true
+}

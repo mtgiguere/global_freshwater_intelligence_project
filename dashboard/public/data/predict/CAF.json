@@ -1,0 +1,10 @@
+{
+  "iso3": "CAF",
+  "country_name": "Central African Republic",
+  "year": 2024,
+  "scarcity_score": 0.1379,
+  "instability_probability": 0.004,
+  "migration_score": 0.149,
+  "compound_risk_score": 9.5,
+  "is_trained": true
+}

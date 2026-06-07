@@ -1,0 +1,10 @@
+{
+  "iso3": "MOZ",
+  "country_name": "Mozambique",
+  "year": 2026,
+  "scarcity_score": 0.3358,
+  "instability_probability": 0.2522,
+  "migration_score": 0.415,
+  "compound_risk_score": 33.4,
+  "is_trained": true
+}

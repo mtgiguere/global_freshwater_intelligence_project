@@ -1,0 +1,10 @@
+{
+  "iso3": "CUB",
+  "country_name": "Cuba",
+  "year": 2026,
+  "scarcity_score": 0.3369,
+  "instability_probability": 0.4497,
+  "migration_score": 0.415,
+  "compound_risk_score": 40.4,
+  "is_trained": true
+}

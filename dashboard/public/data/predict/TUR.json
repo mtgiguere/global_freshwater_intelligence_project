@@ -1,0 +1,10 @@
+{
+  "iso3": "TUR",
+  "country_name": "Türkiye",
+  "year": 2024,
+  "scarcity_score": 0.1342,
+  "instability_probability": 0.005,
+  "migration_score": 0.7538,
+  "compound_risk_score": 30.6,
+  "is_trained": true
+}

@@ -1,0 +1,10 @@
+{
+  "iso3": "NER",
+  "country_name": "Niger",
+  "year": 2026,
+  "scarcity_score": 0.3187,
+  "instability_probability": 0.2606,
+  "migration_score": 0.415,
+  "compound_risk_score": 33.2,
+  "is_trained": true
+}

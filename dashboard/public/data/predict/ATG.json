@@ -1,0 +1,10 @@
+{
+  "iso3": "ATG",
+  "country_name": "Antigua and Barbuda",
+  "year": 2024,
+  "scarcity_score": 0.3686,
+  "instability_probability": 0.0172,
+  "migration_score": 0.1228,
+  "compound_risk_score": 16.0,
+  "is_trained": true
+}

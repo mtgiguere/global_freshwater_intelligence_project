@@ -1,0 +1,10 @@
+{
+  "iso3": "KWT",
+  "country_name": "Kuwait",
+  "year": 2026,
+  "scarcity_score": 0.3397,
+  "instability_probability": 0.4497,
+  "migration_score": 0.415,
+  "compound_risk_score": 40.5,
+  "is_trained": true
+}
