@@ -135,7 +135,12 @@ export default function App() {
       </header>
       <main style={{ padding: 24 }}>
         <PanelErrorBoundary>
-          {active === "atlas"    && <GlobalWaterAtlas onCountrySelect={setCountry} />}
+          {active === "atlas"    && (
+          <GlobalWaterAtlas
+            onCountrySelect={setCountry}
+            onNavigate={(panel) => setActive(panel)}
+          />
+        )}
           {active === "outcomes" && <OutcomesExplorer />}
           {active === "country"  && <CountryDeepDive key={country} iso3={country} />}
           {active === "futures"  && <MLFutures iso3={country} />}

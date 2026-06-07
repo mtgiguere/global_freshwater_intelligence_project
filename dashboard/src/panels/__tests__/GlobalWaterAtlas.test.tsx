@@ -44,13 +44,13 @@ describe('GlobalWaterAtlas', () => {
   it('shows a loading indicator while risk data is being fetched', () => {
     // Promise that never resolves — keeps the component in the loading state.
     vi.mocked(api.globalRisk).mockReturnValue(new Promise(() => {}))
-    render(<GlobalWaterAtlas onCountrySelect={vi.fn()} />)
+    render(<GlobalWaterAtlas onCountrySelect={vi.fn()} onNavigate={vi.fn()} />)
     expect(screen.getByText(/loading/i)).toBeInTheDocument()
   })
 
   it('renders the Deck.gl canvas after data has loaded', async () => {
     vi.mocked(api.globalRisk).mockResolvedValue(MOCK_RISKS)
-    render(<GlobalWaterAtlas onCountrySelect={vi.fn()} />)
+    render(<GlobalWaterAtlas onCountrySelect={vi.fn()} onNavigate={vi.fn()} />)
     await waitFor(() =>
       expect(screen.getByTestId('deckgl-canvas')).toBeInTheDocument()
     )
@@ -59,7 +59,7 @@ describe('GlobalWaterAtlas', () => {
   it('does not render a data table after the globe is live', async () => {
     // The HTML table was the Phase 5 iteration 1 placeholder — it must be removed.
     vi.mocked(api.globalRisk).mockResolvedValue(MOCK_RISKS)
-    render(<GlobalWaterAtlas onCountrySelect={vi.fn()} />)
+    render(<GlobalWaterAtlas onCountrySelect={vi.fn()} onNavigate={vi.fn()} />)
     await waitFor(() =>
       expect(screen.queryByRole('table')).not.toBeInTheDocument()
     )
