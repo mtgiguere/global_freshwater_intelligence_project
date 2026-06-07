@@ -207,12 +207,16 @@ def train_scarcity(panel: pd.DataFrame) -> dict:
     target = build_scarcity_target(panel)
     features = build_scarcity_features(panel)
 
+    # Align to common index — feature engineering (lags/rolling) drops early rows,
+    # so features and target may have different indices after build.
+    common = features.index.intersection(target.index)
+    features, target = features.loc[common], target.loc[common]
     valid = target.notna()
     # X and y follow universal ML naming conventions (PEP8 exemption)
     X, y = features[valid], target[valid]
     print(f"  Training rows: {len(X)}")
 
-    train_panel, test_panel = temporal_train_test_split(panel[valid], test_from_year=2015)
+    train_panel, test_panel = temporal_train_test_split(panel.loc[X.index], test_from_year=2015)
     train_idx = train_panel.index
     test_idx = test_panel.index
 
@@ -296,6 +300,9 @@ def train_instability(panel: pd.DataFrame) -> dict:
     target = build_instability_target(panel)
     features = build_instability_features(panel)
 
+    # Align to common index — same reason as scarcity: lag features drop early rows.
+    common = features.index.intersection(target.index)
+    features, target = features.loc[common], target.loc[common]
     valid = target.notna()
     # X and y follow universal ML naming conventions (PEP8 exemption)
     X, y = features[valid], target[valid]
@@ -303,7 +310,7 @@ def train_instability(panel: pd.DataFrame) -> dict:
     # Typical value: 10-25%. Very low rates mean class imbalance is severe.
     print(f"  Training rows: {len(X)}  |  Positive rate: {y.mean():.1%}")
 
-    train_panel, _ = temporal_train_test_split(panel[valid], test_from_year=2015)
+    train_panel, _ = temporal_train_test_split(panel.loc[X.index], test_from_year=2015)
     train_idx = train_panel.index.intersection(X.index)
     X_train, y_train = X.loc[train_idx], y.loc[train_idx]
     print(f"  Train: {len(X_train)} rows")
@@ -364,6 +371,9 @@ def train_migration(panel: pd.DataFrame) -> dict:
     target = build_migration_target(panel_mig)
     features = build_migration_features(panel_mig)
 
+    # Align to common index before filtering — lag features drop early rows.
+    common = features.index.intersection(target.index)
+    features, target = features.loc[common], target.loc[common]
     valid = target.notna() & features.notna().all(axis=1)
     # X and y follow universal ML naming conventions (PEP8 exemption)
     X, y = features[valid], target[valid]

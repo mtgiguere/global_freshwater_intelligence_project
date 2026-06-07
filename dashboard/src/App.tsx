@@ -33,7 +33,8 @@
  * reading a single line of code.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component } from "react";
+import type { ReactNode } from "react";
 import GlobalWaterAtlas from "./panels/GlobalWaterAtlas";
 import OutcomesExplorer from "./panels/OutcomesExplorer";
 import CountryDeepDive from "./panels/CountryDeepDive";
@@ -41,6 +42,44 @@ import MLFutures from "./panels/MLFutures";
 import CountrySearch from "./components/CountrySearch";
 import { api } from "./api/client";
 import type { CountryRisk } from "./api/client";
+
+/**
+ * PanelErrorBoundary — catches runtime errors inside a dashboard panel so that
+ * one broken panel shows an error message rather than blanking the entire app.
+ *
+ * React error boundaries must be class components (hooks cannot catch render
+ * errors). When a child component throws during render or in a lifecycle method,
+ * getDerivedStateFromError sets `hasError=true` and the fallback UI is shown
+ * instead of the crashed child.
+ */
+class PanelErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; message: string }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, message: "" };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error.message };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 32, color: "#c62828", fontFamily: "monospace", fontSize: 14 }}>
+          <strong>Panel error:</strong> {this.state.message}
+          <br />
+          <span style={{ color: "#555", fontSize: 12 }}>
+            Open the browser console (F12) for the full stack trace.
+          </span>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 type Panel = "atlas" | "outcomes" | "country" | "futures";
 
@@ -76,7 +115,7 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", margin: 0 }}>
-      <header style={{ background: "#1a3a5c", color: "white", padding: "12px 24px", display: "flex", alignItems: "center", gap: 24 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#1a3a5c", color: "white", padding: "12px 24px", display: "flex", alignItems: "center", gap: 24 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 18 }}>Global Freshwater Intelligence Project</h1>
           <p style={{ margin: 0, fontSize: 12, opacity: 0.7 }}>Water · Stability · Human Welfare · 274 Countries · 1946–2025</p>
@@ -95,10 +134,17 @@ export default function App() {
         </nav>
       </header>
       <main style={{ padding: 24 }}>
-        {active === "atlas"    && <GlobalWaterAtlas onCountrySelect={setCountry} />}
-        {active === "outcomes" && <OutcomesExplorer />}
-        {active === "country"  && <CountryDeepDive key={country} iso3={country} />}
-        {active === "futures"  && <MLFutures iso3={country} />}
+        <PanelErrorBoundary>
+          {active === "atlas"    && (
+          <GlobalWaterAtlas
+            onCountrySelect={setCountry}
+            onNavigate={(panel) => setActive(panel)}
+          />
+        )}
+          {active === "outcomes" && <OutcomesExplorer iso3={country} />}
+          {active === "country"  && <CountryDeepDive key={country} iso3={country} />}
+          {active === "futures"  && <MLFutures iso3={country} />}
+        </PanelErrorBoundary>
       </main>
     </div>
   );

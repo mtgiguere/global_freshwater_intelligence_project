@@ -292,19 +292,27 @@ def global_risk() -> list[CountryRisk]:
             CountryRisk(iso3="IND", country_name="India", year=2023, compound_risk_score=55.3),
         ]
 
-    latest_year = int(panel["year"].max())
-    latest = panel[panel["year"] == latest_year].copy()
+    # For the globe colour map we use the FSI score as a proxy CRS until the real
+    # ML models are trained (see train_all.py).  The key issue: panel["year"].max()
+    # may return a year beyond FSI coverage (~2022), giving NaN for every country
+    # and collapsing all scores to the default 50.0 — turning the globe uniformly
+    # orange.  Fix: per country, use the most recent year where FSI is non-null.
+    # Countries with no FSI data at all simply won't appear in `fsi_rows` and will
+    # render as grey on the globe, which is the correct "no data" signal.
+    fsi_rows = (
+        panel[panel["fsi_score"].notna()].sort_values("year").drop_duplicates("iso3", keep="last")
+    )
+    # If somehow the panel has no FSI data at all, fall back to the global latest year
+    # (scores will default to 50 but at least the globe shows country shapes).
+    latest = (
+        fsi_rows if not fsi_rows.empty else panel[panel["year"] == int(panel["year"].max())].copy()
+    )
 
     results = []
     for _, row in latest.iterrows():
-        # FSI proxy for Compound Risk Score — a temporary measure until the real
-        # ML models are trained on real data. The Fragile States Index (FSI) ranges
-        # from 0 (most stable) to 120 (most fragile) and captures many of the same
-        # drivers of risk — governance failure, conflict pressure, economic decline —
-        # that the Phase 4 models predict directly. Dividing by 1.2 maps the 0-120
-        # FSI scale to the 0-100 scale used by the Compound Risk Score.
-        # Once train_all.py has been run and model files exist, the /predict/{iso3}
-        # endpoint provides real CRS values based on ML predictions.
+        # FSI proxy for Compound Risk Score: FSI ranges 0 (stable) to 120 (fragile).
+        # Dividing by 1.2 maps it to the 0-100 CRS scale.
+        # Once train_all.py has been run, /predict/{iso3} provides real ML-based scores.
         fsi = _safe_float(row.get("fsi_score"))
         crs = round(min(fsi / 1.2, 100.0), 1) if fsi is not None else 50.0
         iso3 = str(row["iso3"])
@@ -312,7 +320,7 @@ def global_risk() -> list[CountryRisk]:
             CountryRisk(
                 iso3=iso3,
                 country_name=_country_name(iso3),
-                year=latest_year,
+                year=int(row["year"]),
                 compound_risk_score=crs,
             )
         )
@@ -449,17 +457,34 @@ def predict_country(iso3: str) -> CountryPrediction:
     and returns is_trained=True.
 
     In CI and environments without the parquet/model files, returns synthetic
-    hardcoded data for AFG/FRA/IND/USA/NGA with is_trained=False so the
-    dashboard can display an appropriate caveat.
+    data with is_trained=False. Five reference countries (AFG/FRA/IND/USA/NGA)
+    get illustrative differentiated scores; every other valid ISO3 code gets a
+    neutral 50/50/50 placeholder — never a 404, because the user just clicked
+    a country on the map and deserves a response with a clear "not trained" caveat.
     """
     iso3 = iso3.upper()
     panel = _load_panel()
     models = _load_models()
 
     if panel is None or models is None:
+        # Return a hardcoded synthetic prediction for the five reference countries,
+        # or a neutral 50/50/50 placeholder for any other valid ISO3 code.
+        # We never return 404 in synthetic mode — the user has just clicked a country
+        # on the map and deserves a response. The is_trained=False flag and the
+        # dashboard warning banner communicate clearly that these are not real forecasts.
+        # 404 is reserved for the real-data path (country not in the Master Panel).
         prediction = _SYNTHETIC_PREDICTIONS.get(iso3)
         if prediction is None:
-            raise HTTPException(status_code=404, detail=f"Country {iso3} not found")
+            prediction = CountryPrediction(
+                iso3=iso3,
+                country_name=_country_name(iso3),
+                year=2025,
+                scarcity_score=0.50,
+                instability_probability=0.50,
+                migration_score=0.50,
+                compound_risk_score=50.0,
+                is_trained=False,
+            )
         return prediction
 
     # Real model path — panel and all three model files are present.
