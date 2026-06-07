@@ -1,12 +1,37 @@
 /**
  * Panel 5 — ML Futures
  *
- * Calls GET /api/v1/predict/{iso3} to surface the Phase 4 model scores for the
- * currently selected country. Displays per-component scores (scarcity, instability,
- * migration) and the combined Compound Risk Score.
+ * Forward-looking ML predictions panel. Shows the Phase 4 model outputs for the
+ * currently selected country across three dimensions plus the combined Compound Risk
+ * Score:
  *
- * When is_trained=false the API is returning synthetic CI fallback data — a banner
- * is shown so users know the numbers are illustrative, not real forecasts.
+ *   1. Water Scarcity Score (0–1)
+ *      Gradient Boosting Regression — predicts log(freshwater per capita) 5 years
+ *      ahead. A score near 1.0 means the model expects severe future water scarcity
+ *      given current trends in usage, population, and GRACE groundwater anomalies.
+ *
+ *   2. Instability Probability (0–1)
+ *      XGBoost Binary Classifier — predicts P(FSI score jumps >5 points OR a new
+ *      armed conflict begins within 3 years). A score of 0.8 means the model assigns
+ *      80% probability to significant political deterioration in the near term.
+ *
+ *   3. Migration Pressure Score (0–1)
+ *      Random Forest Regression — predicts log(refugee outflow + 1), normalised to
+ *      [0, 1]. A score near 1.0 indicates the model expects large-scale forced
+ *      displacement from this country in the coming years.
+ *
+ *   4. Compound Risk Score (0–100)
+ *      Weighted combination: Scarcity × 30% + Instability × 35% + Migration × 35%.
+ *      Instability and migration carry slightly more weight because they represent
+ *      the fastest-moving, most policy-actionable risks.
+ *
+ * IMPORTANT — is_trained flag:
+ * The FastAPI backend has a synthetic CI fallback that generates plausible-looking
+ * scores without real model files. When `is_trained=false`, the API is in this
+ * fallback mode and the numbers are illustrative only. A prominent warning banner is
+ * shown to communicate this clearly to users. To generate real forecasts, run:
+ *   `uv run python src/models/train_all.py`
+ * This trains all three models on the Master Panel and saves them to data/models/.
  *
  * TDD note (per TDD contract §"Where strict RED/GREEN TDD is not fully applicable"):
  * UI rendering is excluded from strict RED/GREEN cycles. The useEffect data-fetch
@@ -48,6 +73,17 @@ const MODELS: Array<{
   },
 ];
 
+/**
+ * ScoreBar — horizontal progress-bar visualisation for a normalised score (0–1).
+ *
+ * Renders a coloured fill proportional to `value` against a grey track. The CSS
+ * transition gives a smooth animation when the value changes (e.g. when the user
+ * selects a new country), which helps the reader perceive the change rather than
+ * just seeing a new static bar.
+ *
+ * @param props.value - Score in the range [0, 1]. 0 = bar is empty; 1 = bar is full.
+ * @param props.color - CSS colour string for the filled portion, e.g. "#1565c0".
+ */
 function ScoreBar({ value, color }: { value: number; color: string }) {
   return (
     <div style={{ background: "#eee", borderRadius: 4, height: 10, margin: "6px 0" }}>
@@ -64,12 +100,27 @@ function ScoreBar({ value, color }: { value: number; color: string }) {
   );
 }
 
+/**
+ * MLFutures component — ML predictions panel for the selected country.
+ *
+ * @param props.iso3 - ISO 3166-1 alpha-3 country code for the country to predict,
+ *   e.g. "SDN" for Sudan. Changing this prop triggers a new API request. The
+ *   `cancelled` flag in the useEffect cleanup ensures stale responses from a
+ *   previous country do not overwrite the current country's data.
+ */
 export default function MLFutures({ iso3 }: { iso3: string }) {
   const [prediction, setPrediction] = useState<CountryPrediction | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // `cancelled` is a boolean flag set to true in the cleanup function (the
+    // function returned from useEffect). React calls the cleanup when the component
+    // unmounts OR when the iso3 prop changes before the previous fetch resolves.
+    //
+    // Without this pattern, selecting Country A then quickly selecting Country B
+    // could result in B's render being overwritten by A's late-arriving response.
+    // The flag is cheaper and more reliable than AbortController for this use case.
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -88,6 +139,8 @@ export default function MLFutures({ iso3 }: { iso3: string }) {
         }
       });
     return () => {
+      // Mark any in-flight request as stale. The fetch itself is not aborted
+      // (the network request completes), but its result is silently discarded.
       cancelled = true;
     };
   }, [iso3]);
@@ -101,6 +154,12 @@ export default function MLFutures({ iso3 }: { iso3: string }) {
 
       {prediction && (
         <>
+          {/* is_trained warning banner — shown when the API is in synthetic CI fallback mode.
+              The FastAPI backend can run without real model files, but in that mode it
+              returns deterministic synthetic scores (seeded by iso3 hash) that are designed
+              to look plausible for CI purposes only. They are NOT real predictions.
+              The `role="alert"` attribute ensures screen readers announce this to
+              accessibility users — it is the most important thing on the page when present. */}
           {!prediction.is_trained && (
             <div
               role="alert"

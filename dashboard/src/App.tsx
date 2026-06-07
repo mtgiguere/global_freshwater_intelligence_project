@@ -1,10 +1,36 @@
 /**
- * GFIP Dashboard — Global Freshwater Intelligence Project
+ * App — Root React component for the GFIP Dashboard.
  *
- * Five panels, accessible to every reader — not just developers.
- * The goal: a UN analyst, a journalist, or a curious citizen can open
- * this and immediately understand the relationship between water and
- * human welfare without reading a single line of code.
+ * Defines the overall dashboard layout (top navigation bar with CountrySearch, tab
+ * bar with four panel buttons, main content area) and manages the single piece of
+ * shared state: `selectedIso3` (the ISO3 alpha-3 code of the currently focused
+ * country, defaulting to "AFG"). All four panels receive `selectedIso3` as a prop
+ * and re-render when it changes.
+ *
+ * STATE ARCHITECTURE
+ * A deliberate design decision: there is only ONE piece of global state — which
+ * country the user has selected. Everything else (risk data, time series, predictions)
+ * is fetched by the individual panels when they mount or when `selectedIso3` changes.
+ * This keeps the root component simple and avoids a global state manager (Redux,
+ * Zustand) for what is essentially a single-select interface.
+ *
+ * SHARED DATA (allCountries)
+ * The global risk list (GET /api/v1/global/risk) is loaded once here and passed to
+ * CountrySearch for the autocomplete. GlobalWaterAtlas also fetches the same endpoint
+ * independently (for the globe colours) — this is a small, intentional duplication
+ * that keeps panels self-contained. Both requests are served from the browser cache
+ * after the first one completes.
+ *
+ * PANELS
+ * Each panel corresponds to a phase or result type of the GFIP project:
+ *   - GlobalWaterAtlas: globe with CRS colours (Phase 5 / Phase 4 ML scores)
+ *   - OutcomesExplorer: H1–H7 regression results (Phase 3)
+ *   - CountryDeepDive: historical time-series charts (Phase 1 Master Panel)
+ *   - MLFutures: per-country ML predictions (Phase 4 models)
+ *
+ * The goal: a UN analyst, a journalist, or a curious citizen can open this and
+ * immediately understand the relationship between water and human welfare without
+ * reading a single line of code.
  */
 
 import { useState, useEffect } from "react";
@@ -25,12 +51,25 @@ const NAV: { id: Panel; label: string }[] = [
   { id: "futures", label: "ML Futures" },
 ];
 
+/**
+ * App component — dashboard shell.
+ *
+ * Renders the navigation header and routes between panels based on the `active`
+ * state. The `country` (selectedIso3) state is shared downward to CountryDeepDive
+ * and MLFutures via props; selecting a country in CountrySearch or clicking on the
+ * globe both update it.
+ */
 export default function App() {
+  /** Currently active panel tab — determines which panel is rendered in `<main>`. */
   const [active, setActive] = useState<Panel>("atlas");
+  /** ISO3 code of the currently selected country; drives CountryDeepDive and MLFutures. */
   const [country, setCountry] = useState<string>("AFG");
+  /** Full country risk list, loaded once for the CountrySearch autocomplete. */
   const [allCountries, setAllCountries] = useState<CountryRisk[]>([]);
 
-  // Load the country list once for the search autocomplete.
+  // Load the country list once on mount for the CountrySearch autocomplete dropdown.
+  // If the API is unavailable (e.g. network error, Render cold start), CountrySearch
+  // degrades gracefully — it shows an empty dropdown rather than crashing.
   useEffect(() => {
     api.globalRisk().then(setAllCountries).catch(() => {/* search degrades gracefully to empty */});
   }, []);

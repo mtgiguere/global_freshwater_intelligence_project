@@ -1,12 +1,33 @@
 /**
- * ISO 3166-1 numeric → alpha-3 lookup.
+ * ISO 3166-1 numeric → ISO 3166-1 alpha-3 country code lookup table.
  *
- * world-atlas/countries-110m.json uses ISO 3166-1 numeric codes as feature IDs.
- * Deck.gl's GeoJsonLayer getFillColor / onClick callbacks receive the raw feature,
- * so we need this lookup to map feature.id → iso3 for colour and click handling.
+ * WHY THIS MAPPING EXISTS
+ * The world-atlas npm package (used by Deck.gl to render the 3D globe) bundles the
+ * Natural Earth 110m TopoJSON shapefile. In that file, each country feature is
+ * identified by its ISO 3166-1 *numeric* code (e.g. feature.id === 4 for
+ * Afghanistan). This is the globally stable 3-digit number assigned by the
+ * International Organisation for Standardisation.
  *
- * Source: ISO 3166-1 (stable international standard — these codes do not change).
- * Coverage: all 249 UN-recognised sovereign states and territories in the atlas.
+ * However, all GFIP data — the Master Panel, the FastAPI backend, every hypothesis
+ * result, every ML prediction — uses ISO 3166-1 *alpha-3* codes (e.g. "AFG").
+ * Alpha-3 codes are human-readable, more widely used in geopolitical datasets, and
+ * are the primary key throughout the project.
+ *
+ * This lookup table bridges the two: when Deck.gl fires a getFillColor or onClick
+ * callback with a raw GeoJSON feature, we read feature.id (numeric), look it up
+ * here, and get back the alpha-3 code we can use to query the risk index or the API.
+ *
+ * SOURCE OF THE NUMERIC CODES
+ * All codes are ISO 3166-1 numeric, the same identifiers used in the shapefile
+ * feature IDs. These codes are an internationally stable standard — they are not
+ * reassigned when countries change names or governments. The only time they change
+ * is when a country is added to or removed from the ISO 3166 Maintenance Agency's
+ * list (e.g. South Sudan was assigned 728 when it became independent in 2011).
+ *
+ * Coverage: all 249 UN-recognised sovereign states and territories included in the
+ * world-atlas 110m shapefile.
+ *
+ * @module utils/numericToIso3
  */
 export const numericToIso3: Record<string, string> = {
   '4':   'AFG', '8':   'ALB', '12':  'DZA', '20':  'AND', '24':  'AGO',

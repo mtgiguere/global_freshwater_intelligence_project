@@ -1,18 +1,32 @@
 /**
  * Panel 3 — Country Deep Dive
  *
- * Triggered by clicking a country on the Global Water Atlas.
- * Shows the full history of one country across four key variables
- * as interactive Recharts line charts.
+ * Time-series panel showing historical trends for a selected country across four
+ * dimensions: renewable freshwater per capita, GDP per capita (PPP), life
+ * expectancy, and FSI fragility score. Each metric gets its own line chart so a
+ * reader can focus on one relationship at a time without being overwhelmed by a
+ * multi-axis overlay.
  *
- * What this tells a policymaker or researcher:
- *   - How freshwater availability has changed over time in this country
- *   - Whether economic performance tracks the water trend (H1)
- *   - Whether life expectancy improved as water access grew (H4)
- *   - Whether state fragility rose during water-scarce periods (H2)
+ * Uses Recharts LineChart with `connectNulls={false}` to display honest data gaps
+ * rather than interpolated lines. A gap in the chart where data does not exist is
+ * important information for a policymaker — it communicates measurement uncertainty,
+ * not just missing pixels.
  *
- * Each chart is standalone so a reader can focus on one relationship
- * at a time without being overwhelmed by a multi-axis overlay.
+ * What this panel tells a policymaker or researcher:
+ *   - How freshwater availability has changed over time for this specific country
+ *     (not global averages — what happened HERE).
+ *   - Whether economic performance tracks the water trend (hypothesis H1:
+ *     water scarcity → reduced GDP growth).
+ *   - Whether life expectancy improved alongside water access growth (H4:
+ *     water scarcity → higher under-5 mortality / lower life expectancy).
+ *   - Whether state fragility rose during water-scarce periods (H2:
+ *     water scarcity → higher FSI score / state fragility).
+ *
+ * Data sources shown (as labelled in the panel):
+ *   - FAO AQUASTAT (freshwater)
+ *   - World Bank (economy)
+ *   - WHO (health)
+ *   - Fund for Peace / FSI (fragility)
  *
  * TDD note: Recharts renders SVG, which jsdom supports. Component tests
  * in __tests__/CountryDeepDive.test.tsx verify loading state, error state,
@@ -64,12 +78,24 @@ const CHARTS: {
   },
 ]
 
+/**
+ * CountryDeepDive component — historical trend charts for one country.
+ *
+ * @param props.iso3 - ISO 3166-1 alpha-3 country code for the country to display,
+ *   e.g. "KEN" for Kenya. Changing this prop triggers a fresh API fetch and re-renders
+ *   all four charts. In App.tsx the component is keyed on `country` so that React
+ *   unmounts and remounts it (resetting loading state) on each new selection.
+ */
 export default function CountryDeepDive({ iso3 }: { iso3: string }) {
   const [detail, setDetail] = useState<CountryDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // `active` flag prevents a stale async response from updating state after the
+    // component has unmounted or the iso3 prop has changed. Without this guard,
+    // rapidly switching countries could cause a response from a previous country to
+    // overwrite the data for the current one — a classic React async state race.
     let active = true
     api.countryDetail(iso3)
       .then(data  => { if (active) { setDetail(data);  setLoading(false) } })
@@ -116,6 +142,19 @@ export default function CountryDeepDive({ iso3 }: { iso3: string }) {
                   stroke={color}
                   strokeWidth={2}
                   dot={false}
+                  // connectNulls={false} is intentional — do NOT change this to true.
+                  //
+                  // When this is false, Recharts draws a visible break in the line
+                  // wherever the data value is null. This is scientifically honest:
+                  // for policymakers and researchers reading these charts, a gap is
+                  // important information. It means "we don't have a measurement for
+                  // this country in this year" — which could reflect a real data
+                  // collection failure, a conflict that disrupted reporting, or a
+                  // country that didn't exist yet (e.g. South Sudan before 2011).
+                  //
+                  // Connecting across gaps (connectNulls=true) would imply a smooth
+                  // trend across years where we simply have no data — misleading to
+                  // any reader who doesn't know to look for the missing point markers.
                   connectNulls={false}
                 />
               </LineChart>
