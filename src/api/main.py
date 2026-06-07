@@ -1,8 +1,51 @@
-"""GFIP FastAPI application.
+"""GFIP FastAPI application — the complete backend for the React dashboard.
 
-Serves the Master Panel data and Phase 3 hypothesis results to the
-React dashboard. Model prediction endpoints will be added in Phase 5
-iteration 2 once the models are trained on real data.
+This module is the central server for the Global Freshwater Intelligence Project.
+It exposes all data and analytical results as a REST API consumed by the React
+dashboard (dashboard/src/). It is deployed on Render; the frontend is on Vercel.
+
+What this API does
+------------------
+It serves three categories of data:
+
+1. Master Panel data — the 17,070-row x 35-column dataset built in Phase 1,
+   covering 274 countries from 1946-2025. If the parquet file is not present
+   (it is gitignored; it only exists after running the Phase 1 pipeline locally
+   or downloading from S3), all endpoints fall back gracefully to hardcoded
+   synthetic data so that the dashboard still renders in CI and on fresh clones.
+
+2. Phase 3 hypothesis results — the confirmed statistical findings from the R
+   analysis in analysis/. Results are hardcoded here because Phase 5 does not
+   yet have a database layer; a future version will load these from a database
+   populated by the R pipeline.
+
+3. Phase 4 ML predictions — forward projections for each country from the three
+   machine learning models (XGBoost instability, GradientBoosting scarcity,
+   RandomForest migration) and the Compound Risk Score that combines them. If
+   the trained model files are not present (run `uv run python src/models/train_all.py`
+   to produce them), the endpoint returns synthetic data with `is_trained=False`
+   so the dashboard can display an appropriate warning to the user.
+
+Endpoints
+---------
+GET /health
+    Liveness probe. Returns {"status": "ok", "version": "1.0.0"}.
+
+GET /api/v1/global/risk
+    Compound Risk Score for every country, most recent year available.
+    Used by the GlobalWaterAtlas panel to colour the Deck.gl globe.
+
+GET /api/v1/country/{iso3}
+    Full historical time series for one country (all available years).
+    Used by the CountryDeepDive panel to plot trends over time.
+
+GET /api/v1/hypotheses
+    All H1-H7 Phase 3 statistical results (effect sizes, p-values, n).
+    Used by the OutcomesExplorer and HypothesisDetail panels.
+
+GET /api/v1/predict/{iso3}
+    ML model predictions for one country (scarcity, instability, migration,
+    and the composite Compound Risk Score). Used by the MLFutures panel.
 
 Run locally:
     uv run uvicorn src.api.main:app --reload --port 8000
@@ -39,6 +82,13 @@ app = FastAPI(
 # Defaults to "*" for local development and CI.
 _ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
+# CORS (Cross-Origin Resource Sharing) is a browser security mechanism that
+# prevents JavaScript on one domain from making HTTP requests to a different domain
+# unless the server explicitly permits it. Our React app is hosted on Vercel
+# (e.g. https://gfip.vercel.app) while the API is on Render (e.g. https://gfip-api.onrender.com).
+# Without this middleware the browser would block every API call from the dashboard.
+# In production, set ALLOWED_ORIGINS to the exact Vercel URL so we do not
+# accidentally expose the API to other origins.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
@@ -49,7 +99,23 @@ app.add_middleware(
 _PANEL_PATH = Path(__file__).parents[2] / "data" / "processed" / "master_panel.parquet"
 _MODELS_DIR = Path(__file__).parents[2] / "data" / "models"
 
-# Phase 3 results — hardcoded from the R analysis (Phase 5 will load from DB)
+# ---------------------------------------------------------------------------
+# Phase 3 statistical results — hardcoded from the R analysis in analysis/
+# ---------------------------------------------------------------------------
+# These are the confirmed findings from the seven hypothesis tests run in R
+# using OLS regression with country and year fixed effects on the Master Panel.
+#
+# Each `beta` value is the OLS coefficient estimate — the slope of the regression
+# line between the exposure variable and the outcome variable, holding other
+# factors constant. Interpreting beta:
+#   - Positive beta: higher freshwater (or water access) is associated with a
+#     higher value of the outcome (e.g. higher GDP per capita).
+#   - Negative beta: higher freshwater is associated with a lower value of the
+#     outcome (e.g. lower FSI fragility score, which is good — lower = more stable).
+#
+# Values are hardcoded here because Phase 5 does not yet have a database.
+# A future version will query a database populated by a scheduled R pipeline run.
+# The R analysis scripts that produced these numbers live in analysis/test_h*.R.
 _HYPOTHESIS_RESULTS = [
     HypothesisResult(
         id="H1",
@@ -139,19 +205,51 @@ _HYPOTHESIS_RESULTS = [
 
 
 def _load_panel() -> pd.DataFrame | None:
-    """Load the Master Panel if available; return None in test/CI environments."""
+    """Load the Master Panel parquet file if it exists; otherwise return None.
+
+    The Master Panel (data/processed/master_panel.parquet) is the 17,070-row
+    dataset produced by the Phase 1 pipeline. It is gitignored because it is
+    too large for version control and because it contains data from sources
+    whose redistribution terms require users to download from origin.
+
+    Without the parquet file — which is the normal state on a fresh clone,
+    in CI, and on the deployed Render instance before the pipeline is run —
+    every endpoint that calls this function falls back to hardcoded synthetic
+    data. This means the dashboard always renders; it just shows illustrative
+    placeholder numbers rather than real data, and the user sees no error.
+
+    To populate real data locally:
+        uv run python src/pipeline/master_panel.py
+
+    Returns:
+        The Master Panel as a pandas DataFrame, or None if the file is absent.
+    """
     if _PANEL_PATH.exists():
         return pd.read_parquet(_PANEL_PATH)
     return None
 
 
 def _load_models() -> dict | None:
-    """Load trained model files if all three exist; return None in CI.
+    """Load all three trained Phase 4 model files if they exist; otherwise return None.
 
-    Returns a dict with keys 'instability', 'scarcity', 'migration', and 'norm'.
-    The 'norm' entry is the normalization stats JSON written by train_all.py:
-      {"scarcity": {"min": ..., "max": ...}, "migration": {"min": ..., "max": ...}}
-    These stats are needed to map raw model outputs to [0,1] for the CRS formula.
+    This function returns None whenever any of the four required files are absent.
+    That is the expected state on a fresh clone or in CI — the models are not
+    trained yet. The caller (predict_country) handles the None case by returning
+    synthetic placeholder data with is_trained=False.
+
+    Once `uv run python src/models/train_all.py` has been run, four files are
+    written to data/models/:
+      - instability_model.joblib  — XGBoost binary classifier
+      - scarcity_model.joblib     — GradientBoosting regressor
+      - migration_model.joblib    — RandomForest regressor
+      - normalization_stats.json  — min/max values from the training set, needed
+                                    to convert raw model outputs to [0,1] for the
+                                    Compound Risk Score formula
+
+    Returns:
+        A dict with keys 'instability', 'scarcity', 'migration', and 'norm'
+        (the loaded scikit-learn / XGBoost model objects plus the normalisation
+        stats dict), or None if any required file is missing.
     """
     required = [
         "instability_model.joblib",
@@ -199,8 +297,14 @@ def global_risk() -> list[CountryRisk]:
 
     results = []
     for _, row in latest.iterrows():
-        # Use FSI score as a proxy CRS until ML models are trained on real data.
-        # FSI ranges 0-120; we normalise to 0-100.
+        # FSI proxy for Compound Risk Score — a temporary measure until the real
+        # ML models are trained on real data. The Fragile States Index (FSI) ranges
+        # from 0 (most stable) to 120 (most fragile) and captures many of the same
+        # drivers of risk — governance failure, conflict pressure, economic decline —
+        # that the Phase 4 models predict directly. Dividing by 1.2 maps the 0-120
+        # FSI scale to the 0-100 scale used by the Compound Risk Score.
+        # Once train_all.py has been run and model files exist, the /predict/{iso3}
+        # endpoint provides real CRS values based on ML predictions.
         fsi = _safe_float(row.get("fsi_score"))
         crs = round(min(fsi / 1.2, 100.0), 1) if fsi is not None else 50.0
         iso3 = str(row["iso3"])
@@ -367,16 +471,24 @@ def predict_country(iso3: str) -> CountryPrediction:
 
 
 def _run_models(iso3: str, country_rows: pd.DataFrame, models: dict) -> CountryPrediction:
-    """Run the three Phase 4 models on the most recent panel row for iso3.
+    """Run the three Phase 4 ML models on the most recent data row for a country.
 
-    Feature building uses the full country history for lag/rolling windows,
-    then predicts on only the last (most recent) row.
+    This function is only called when both the Master Panel and all three trained
+    model files are present. It handles feature construction, prediction, score
+    normalisation, and assembly of the Compound Risk Score.
 
-    Normalisation uses the training-set min/max saved by train_all.py:
-    - instability: already [0,1] (XGBoost probability output)
-    - scarcity: predicted log(freshwater_percap), mapped to [0,1] via saved range
-      BUT inverted: lower freshwater = higher scarcity risk
-    - migration: predicted log(refugee_outflow+1), mapped to [0,1] via saved range
+    Args:
+        iso3: ISO 3166-1 alpha-3 country code (e.g. "IND").
+        country_rows: All rows for this country from the Master Panel, sorted by
+            year ascending. The full history is needed to compute lag and rolling
+            features (e.g. 3-year lag of freshwater, 5-year rolling mean of GDP)
+            even though we only predict on the most recent row.
+        models: Dict returned by _load_models() — the three fitted model objects
+            plus the normalisation stats.
+
+    Returns:
+        A CountryPrediction with is_trained=True and scores derived from the
+        real ML models rather than synthetic fallback data.
     """
     from src.models.compound_risk import WEIGHTS
     from src.models.features import add_log_transforms
@@ -384,26 +496,50 @@ def _run_models(iso3: str, country_rows: pd.DataFrame, models: dict) -> CountryP
     from src.models.migration import build_migration_features
     from src.models.scarcity import build_scarcity_features
 
+    # Step 1 — add log-transformed columns (log_freshwater_percap, log_gdp_pc_ppp, etc.)
+    # that the model feature builders expect. The transforms are defined in features.py
+    # and applied consistently here and during training to avoid train/serve skew.
     panel_with_logs = add_log_transforms(country_rows)
 
+    # Step 2 — build the feature matrices for each model.
+    # Each build_*_features function selects and constructs the columns that the
+    # corresponding model was trained on. Passing the full country history here
+    # (not just the last row) is critical: lag and rolling features require
+    # preceding years to be present in the DataFrame before they can be computed.
     X_instab = build_instability_features(panel_with_logs)
     X_scarc = build_scarcity_features(panel_with_logs)
     X_migr = build_migration_features(panel_with_logs)
 
-    # Predict on the last row (most recent year)
+    # Step 3 — predict on the last row only (the most recent year of data).
+    # .iloc[[-1]] keeps the result as a single-row DataFrame rather than a Series,
+    # which is what scikit-learn/XGBoost expect as input to predict().
     instab_prob = float(models["instability"].predict_proba(X_instab.iloc[[-1]])[:, 1][0])
 
+    # Step 4 — normalise the scarcity score to [0, 1].
+    # The scarcity model predicts log(renewable_freshwater_percap 5 years ahead).
+    # A higher predicted value means MORE water — lower scarcity. We invert the
+    # normalised scale (1 - ...) so that the scarcity score follows the same
+    # direction as instability and migration: higher score = worse outcome = more risk.
     scarc_raw = float(models["scarcity"].predict(X_scarc.iloc[[-1]])[0])
     s_min = models["norm"]["scarcity"]["min"]
     s_max = models["norm"]["scarcity"]["max"]
-    # Lower predicted log(freshwater) = higher scarcity — so invert the [0,1] scale
+    # Lower predicted log(freshwater) = higher scarcity — so invert the [0,1] scale.
+    # The 1e-9 guard prevents division by zero if min == max (degenerate training set).
     scarc_norm = 1.0 - float(np.clip((scarc_raw - s_min) / max(s_max - s_min, 1e-9), 0, 1))
 
+    # Step 5 — normalise the migration score to [0, 1].
+    # The migration model predicts log(refugee_outflow + 1). Higher predicted outflow
+    # = more displacement risk, so no inversion needed — the scale already runs
+    # in the "higher = worse" direction.
     migr_raw = float(models["migration"].predict(X_migr.iloc[[-1]])[0])
     m_min = models["norm"]["migration"]["min"]
     m_max = models["norm"]["migration"]["max"]
     migr_norm = float(np.clip((migr_raw - m_min) / max(m_max - m_min, 1e-9), 0, 1))
 
+    # Step 6 — compute the Compound Risk Score using the weights from compound_risk.py:
+    # scarcity 30%, instability 35%, migration 35%. Multiply by 100 to get a 0-100 scale.
+    # These weights were chosen to reflect that political instability and forced migration
+    # are the most directly observable and policy-relevant consequences of water stress.
     crs = round(
         (
             WEIGHTS["scarcity"] * scarc_norm
@@ -428,7 +564,27 @@ def _run_models(iso3: str, country_rows: pd.DataFrame, models: dict) -> CountryP
 
 
 def _country_name(iso3: str) -> str:
-    """Look up the full English country name from an ISO 3166-1 alpha-3 code."""
+    """Look up the full English country name for an ISO 3166-1 alpha-3 code.
+
+    The Master Panel uses ISO3 codes (e.g. "IND", "FRA", "NGA") as the primary
+    country identifier throughout — they are unambiguous, compact, and stable.
+    However, the API and dashboard need full human-readable names ("India",
+    "France", "Nigeria") for display in labels, tooltips, and search results.
+
+    We use pycountry rather than a hand-rolled lookup table because it implements
+    the authoritative ISO 3166-1 standard and handles edge cases correctly
+    (e.g. "United States" vs "United States of America", Kosovo's special status,
+    territories with alpha-3 codes that are not sovereign states).
+
+    Args:
+        iso3: A three-letter ISO 3166-1 alpha-3 country code.
+
+    Returns:
+        The official ISO English short name for the country (e.g. "India"),
+        or the original iso3 string if the code is not found in pycountry's
+        database (graceful fallback so the API never returns an error for an
+        unknown code — the frontend can still display the code itself).
+    """
     try:
         return pycountry.countries.get(alpha_3=iso3).name
     except AttributeError:
@@ -436,14 +592,53 @@ def _country_name(iso3: str) -> str:
 
 
 def _safe_float(val) -> float | None:
+    """Convert a value to float, returning None for NaN, None, or non-numeric inputs.
+
+    The Master Panel has significant data gaps — many countries did not report
+    certain variables in certain years — represented as pandas NA / numpy NaN.
+    Pydantic rejects NaN as an invalid float in JSON responses (NaN is not a valid
+    JSON value), so we convert NaN to None (JSON null), which the dashboard handles
+    by leaving an honest gap in the chart rather than crashing.
+
+    The `v != v` expression is a deliberate IEEE 754 trick: in floating-point
+    arithmetic, NaN is the ONLY value that is not equal to itself. So `v != v`
+    returns True if and only if v is NaN. We use this instead of math.isnan()
+    because math.isnan() raises TypeError when passed a non-float type (e.g. a
+    numpy integer or None), whereas the `float(val)` conversion above already
+    guarantees v is a Python float by the time we reach the NaN check.
+
+    Args:
+        val: Any value — typically a pandas Series element which may be a float,
+            int, numpy scalar, NaN, or None.
+
+    Returns:
+        A Python float, or None if the value is NaN, None, or cannot be converted.
+    """
     try:
         v = float(val)
-        return None if v != v else v  # NaN check
+        # NaN check: NaN is the only float where `x != x` is True (IEEE 754).
+        # math.isnan() would raise TypeError on non-float inputs, so we use this
+        # form after already having called float() above.
+        return None if v != v else v
     except (TypeError, ValueError):
         return None
 
 
 def _safe_int(val) -> int | None:
+    """Convert a value to int, returning None for None, NaN, or non-numeric inputs.
+
+    Used when extracting integer columns (e.g. ucdp_conflict_binary, which is
+    0 or 1) from the Master Panel. Pandas may represent these as float64 columns
+    with NaN for missing years; int() handles the numeric conversion while the
+    try/except catches None and NaN (NaN raises ValueError under int()).
+
+    Args:
+        val: Any value — typically a pandas Series element which may be a float,
+            int, numpy scalar, NaN, or None.
+
+    Returns:
+        A Python int, or None if the value is None, NaN, or cannot be converted.
+    """
     try:
         return int(val)
     except (TypeError, ValueError):

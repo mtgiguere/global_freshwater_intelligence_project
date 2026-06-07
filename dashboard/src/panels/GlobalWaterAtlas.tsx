@@ -1,14 +1,26 @@
 /**
  * Panel 1 — Global Water Atlas
  *
- * A WebGL globe (Deck.gl GlobeView) showing every country coloured by its
- * Compound Risk Score (0-100). Red = critical water stress and human
- * vulnerability. Green = stable. Click any country to open its Deep Dive.
+ * This is the landing panel of the GFIP dashboard — a 3D interactive globe
+ * rendered using Deck.gl's GlobeView (WebGL). Every country is filled with a
+ * colour derived from its Compound Risk Score (CRS, 0–100):
+ *   - Deep red  (≥70): critical water-related vulnerability
+ *   - Orange    (50–70): high stress
+ *   - Amber     (30–50): elevated but manageable stress
+ *   - Green     (<30): healthy water and stability buffers
+ *   - Grey:     no data available for this country
  *
- * What this tells a reader at a glance:
- *   - Which parts of the world face the greatest water-related risk RIGHT NOW
- *   - How that stress concentrates in Sub-Saharan Africa, South Asia, and MENA
- *   - Where the groundwater crisis (H7) overlaps with fragility and poverty
+ * Clicking a country updates the `selectedIso3` state in App.tsx (via the
+ * onCountrySelect callback), which simultaneously updates the CountrySearch input
+ * in the navigation bar and, if the user navigates to the Country Deep Dive panel,
+ * loads that country's full historical data.
+ *
+ * What this panel tells a reader at a glance:
+ *   - Which parts of the world face the greatest water-related risk right now.
+ *   - How that stress concentrates geographically — Sub-Saharan Africa, South
+ *     Asia, and MENA are consistently the most affected regions.
+ *   - Where the groundwater depletion crisis (H7) overlaps with fragility and
+ *     poverty — visible as clusters of red/orange in arid regions.
  *
  * TDD note: the Deck.gl GlobeView renders via WebGL, which jsdom cannot
  * simulate. The component's data-fetching lifecycle (loading / loaded states)
@@ -52,6 +64,13 @@ const LEGEND: [string, string][] = [
   ['Low (<30)',      '#2e7d32'],
 ]
 
+/**
+ * GlobalWaterAtlas component — the 3D globe landing panel.
+ *
+ * @param props.onCountrySelect - Callback fired when the user clicks a country on
+ *   the globe. Receives the ISO3 alpha-3 code of the clicked country (e.g. "KEN").
+ *   In App.tsx this sets `selectedIso3` and switches to the Country Deep Dive panel.
+ */
 export default function GlobalWaterAtlas({
   onCountrySelect,
 }: {
@@ -67,6 +86,8 @@ export default function GlobalWaterAtlas({
   }, [])
 
   // Build the iso3→score lookup once when risk data arrives, not on every render.
+  // Deck.gl calls getFillColor for every country feature on every render frame,
+  // so this Map gives O(1) access rather than an O(n) array scan per country.
   const riskIndex = useMemo(() => buildRiskIndex(risks), [risks])
 
   const layer = new GeoJsonLayer({
@@ -75,20 +96,33 @@ export default function GlobalWaterAtlas({
     filled: true,
     stroked: true,
     lineWidthMinPixels: 0.5,
-    // Map each country feature to its CRS colour.
-    // feature.id is ISO 3166-1 numeric; numericToIso3 converts to alpha-3 for the lookup.
+    // GeoJsonLayer fill colour callback — called once per country feature per frame.
+    //
+    // The world-atlas shapefile identifies countries by ISO 3166-1 *numeric* code
+    // (e.g. f.id === 4 for Afghanistan). The GFIP risk index is keyed on
+    // ISO 3166-1 *alpha-3* codes (e.g. "AFG"). numericToIso3 bridges the two.
+    //
+    // If a country has no entry in numericToIso3 (e.g. a disputed territory not in
+    // the standard) or no CRS data in the risk index, riskColor receives `undefined`
+    // and returns a neutral grey — so no country is ever rendered without a fill.
     getFillColor: (f) => {
       const iso3 = numericToIso3[String(f.id)]
       return riskColor(iso3 ? riskIndex.get(iso3) : undefined)
     },
     getLineColor: [255, 255, 255, 40],
     pickable: true,
+    // onClick handler — translates the clicked feature's numeric ID to an alpha-3
+    // code and calls onCountrySelect, which updates App.tsx's selectedIso3 state.
+    // The guard `if (!object)` handles clicks on the ocean (no feature intersected).
+    // The guard `if (iso3)` handles features for territories not in our lookup table.
     onClick: ({ object }) => {
       if (!object) return
       const iso3 = numericToIso3[String(object.id)]
       if (iso3) onCountrySelect(iso3)
     },
     // Tell Deck.gl to recompute fill colours when the risk index changes.
+    // Without this, Deck.gl caches the getFillColor results and the globe would
+    // not update after the API response arrives.
     updateTriggers: { getFillColor: [riskIndex] },
   })
 
