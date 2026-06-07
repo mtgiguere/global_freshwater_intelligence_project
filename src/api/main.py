@@ -300,15 +300,13 @@ def global_risk() -> list[CountryRisk]:
     # Countries with no FSI data at all simply won't appear in `fsi_rows` and will
     # render as grey on the globe, which is the correct "no data" signal.
     fsi_rows = (
-        panel[panel["fsi_score"].notna()]
-        .sort_values("year")
-        .drop_duplicates("iso3", keep="last")
+        panel[panel["fsi_score"].notna()].sort_values("year").drop_duplicates("iso3", keep="last")
     )
     # If somehow the panel has no FSI data at all, fall back to the global latest year
     # (scores will default to 50 but at least the globe shows country shapes).
-    latest = fsi_rows if not fsi_rows.empty else panel[
-        panel["year"] == int(panel["year"].max())
-    ].copy()
+    latest = (
+        fsi_rows if not fsi_rows.empty else panel[panel["year"] == int(panel["year"].max())].copy()
+    )
 
     results = []
     for _, row in latest.iterrows():
