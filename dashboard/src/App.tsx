@@ -118,7 +118,7 @@ export default function App() {
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#1a3a5c", color: "white", padding: "12px 24px", display: "flex", alignItems: "center", gap: 24 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 18 }}>Global Freshwater Intelligence Project</h1>
-          <p style={{ margin: 0, fontSize: 12, opacity: 0.7 }}>Water · Stability · Human Welfare · 274 Countries · 1946–2025</p>
+          <p style={{ margin: 0, fontSize: 12, opacity: 0.7 }}>Water · Stability · Human Welfare · 274 Countries · 1946–2024</p>
         </div>
         <nav style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
           {NAV.map(({ id, label }) => (
@@ -133,6 +133,14 @@ export default function App() {
           />
         </nav>
       </header>
+      {/* Data currency notice — sources like FSI, UCDP, and World Bank publish
+          with a 12–18 month lag. This banner sets honest expectations so users
+          don't interpret missing 2025–2026 events as a gap in the project. */}
+      <div style={{ background: "#fff8e1", borderBottom: "1px solid #ffe082", padding: "6px 24px", fontSize: 12, color: "#5d4037", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontWeight: 600 }}>Data through 2024</span>
+        <span style={{ opacity: 0.7 }}>·</span>
+        <span>Source datasets (FSI, UCDP, World Bank, AQUASTAT) publish annually with a 12–18 month lag — 2025 and 2026 events are not yet reflected in any public dataset.</span>
+      </div>
       <main style={{ padding: 24 }}>
         <PanelErrorBoundary>
           {active === "atlas"    && (
