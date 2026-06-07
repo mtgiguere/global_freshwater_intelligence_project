@@ -183,12 +183,16 @@ export interface CountryPrediction {
  * JSON file path directly. In live mode, it passes the API endpoint path which
  * is prefixed with BASE_URL.
  *
- * @param path - URL path to fetch. Static mode: /data/... Live mode: /api/v1/...
+ * @param path - URL path to fetch. Static mode: data/... Live mode: /api/v1/...
  * @returns A Promise resolving to the JSON response body, typed as T.
  * @throws Error with a descriptive message if the HTTP response status is not 2xx.
  */
 async function get<T>(path: string): Promise<T> {
-  const url = STATIC ? path : `${BASE_URL}${path}`;
+  // In static mode, paths are relative to the app's base URL (import.meta.env.BASE_URL).
+  // Vite sets BASE_URL to the VITE_BASE_PATH at build time — e.g.
+  // '/global_freshwater_intelligence_project/' on GitHub Pages, '/' locally.
+  // Using absolute '/data/...' would resolve from the domain root and 404 on Pages.
+  const url = STATIC ? `${import.meta.env.BASE_URL}${path}` : `${BASE_URL}${path}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`API error ${response.status}: ${url}`);
@@ -210,7 +214,7 @@ export const api = {
    * Static: /data/global-risk.json
    */
   globalRisk: () =>
-    get<CountryRisk[]>(STATIC ? "/data/global-risk.json" : "/api/v1/global/risk"),
+    get<CountryRisk[]>(STATIC ? "data/global-risk.json" : "/api/v1/global/risk"),
 
   /**
    * Fetches the full Master Panel time-series for one country.
@@ -222,7 +226,7 @@ export const api = {
   countryDetail: (iso3: string) =>
     get<CountryDetail>(
       STATIC
-        ? `/data/country/${iso3.toUpperCase()}.json`
+        ? `data/country/${iso3.toUpperCase()}.json`
         : `/api/v1/country/${iso3}`
     ),
 
@@ -232,7 +236,7 @@ export const api = {
    * Static: /data/hypotheses.json
    */
   hypotheses: () =>
-    get<HypothesisResult[]>(STATIC ? "/data/hypotheses.json" : "/api/v1/hypotheses"),
+    get<HypothesisResult[]>(STATIC ? "data/hypotheses.json" : "/api/v1/hypotheses"),
 
   /**
    * Fetches Phase 4 ML model predictions for one country.
@@ -244,7 +248,7 @@ export const api = {
   predictCountry: (iso3: string) =>
     get<CountryPrediction>(
       STATIC
-        ? `/data/predict/${iso3.toUpperCase()}.json`
+        ? `data/predict/${iso3.toUpperCase()}.json`
         : `/api/v1/predict/${iso3}`
     ),
 };
