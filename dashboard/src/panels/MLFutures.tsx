@@ -65,7 +65,7 @@ const MODELS: Array<{
       signal: given current trends in population growth, agricultural water use,
       and groundwater depletion (from GRACE satellites), how much freshwater
       will this country have per person in five years?`,
-    how: `Trained on the GFIP Master Panel (1960–2022, 274 countries) using
+    how: `Trained on the GFIP Master Panel (274 countries, data through 2024) using
       Gradient Boosting — a technique that builds hundreds of small decision trees,
       each correcting the errors of the last. Features include lagged freshwater
       values (what was the trend?), rolling averages (is it accelerating?),
@@ -214,7 +214,7 @@ export default function MLFutures({ iso3 }: { iso3: string }) {
       <h2>Risk Forecast — {prediction?.country_name ?? iso3}</h2>
       <p style={{ color: "#555", marginBottom: 16, lineHeight: 1.6 }}>
         These scores are produced by three independent machine learning models trained on the
-        GFIP Master Panel — 274 countries, 1960–2022. Each model was built to answer a specific
+        GFIP Master Panel — 274 countries, data through 2024. Each model was built to answer a specific
         policy-relevant question about this country's near-term future. The scores are not
         predictions in the sense of "this will definitely happen" — they are <em>risk signals</em>:
         the models have learned what patterns preceded past crises and are flagging whether
