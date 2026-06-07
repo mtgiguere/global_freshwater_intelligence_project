@@ -1,0 +1,10 @@
+{
+  "iso3": "RUS",
+  "country_name": "Russian Federation",
+  "year": 2024,
+  "scarcity_score": 0.0052,
+  "instability_probability": 0.0064,
+  "migration_score": 0.7529,
+  "compound_risk_score": 26.7,
+  "is_trained": true
+}

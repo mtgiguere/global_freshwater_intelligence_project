@@ -1,0 +1,10 @@
+{
+  "iso3": "SSD",
+  "country_name": "South Sudan",
+  "year": 2024,
+  "scarcity_score": 0.1816,
+  "instability_probability": 0.0371,
+  "migration_score": 0.9835,
+  "compound_risk_score": 41.2,
+  "is_trained": true
+}

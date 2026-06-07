@@ -1,0 +1,68 @@
+name: Deploy to GitHub Pages
+
+# Runs on every push to main, or manually from the Actions tab.
+# The static JSON data files (dashboard/public/data/) are committed to the repo
+# and generated locally via `python scripts/generate_static.py`. This workflow
+# only builds the React app and deploys it — no Python or data processing needed.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Required for the deploy-pages action to write to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment runs at a time; a new push cancels any in-progress deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: dashboard
+
+      - name: Build
+        # VITE_API_URL is intentionally NOT set — this tells the React app to
+        # fetch from /data/*.json (the pre-generated static files) rather than
+        # a live FastAPI server.
+        #
+        # VITE_BASE_PATH sets the sub-path for GitHub Pages. If you add a custom
+        # domain later, remove this env var (or set it to '/') and update the
+        # CNAME file in dashboard/public/.
+        run: npm run build
+        working-directory: dashboard
+        env:
+          VITE_BASE_PATH: /global_freshwater_intelligence_project/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dashboard/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

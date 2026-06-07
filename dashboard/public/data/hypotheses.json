@@ -1,0 +1,90 @@
+[
+  {
+    "id": "H1",
+    "label": "Freshwater → GDP per capita",
+    "exposure": "log_freshwater_percap",
+    "outcome": "log_gdp_pc_ppp",
+    "beta": 0.4689,
+    "p_value": 3.5e-06,
+    "n_obs": 9562,
+    "confirmed": true,
+    "note": null
+  },
+  {
+    "id": "H2",
+    "label": "Freshwater → State fragility",
+    "exposure": "log_freshwater_percap",
+    "outcome": "fsi_score",
+    "beta": -11.059,
+    "p_value": 0.00356,
+    "n_obs": 2902,
+    "confirmed": true,
+    "note": null
+  },
+  {
+    "id": "H3",
+    "label": "Freshwater → Conflict probability",
+    "exposure": "log_freshwater_percap",
+    "outcome": "ucdp_conflict_binary",
+    "beta": -0.049,
+    "p_value": 0.082,
+    "n_obs": 10438,
+    "confirmed": true,
+    "note": "Directionally confirmed; p=0.08"
+  },
+  {
+    "id": "H4",
+    "label": "Safe water access → Life expectancy",
+    "exposure": "safe_water_access_pct",
+    "outcome": "life_expectancy",
+    "beta": 0.078,
+    "p_value": 0.00093,
+    "n_obs": 3567,
+    "confirmed": true,
+    "note": null
+  },
+  {
+    "id": "H4b",
+    "label": "Safe water access → Under-5 mortality",
+    "exposure": "safe_water_access_pct",
+    "outcome": "u5mr",
+    "beta": -0.652,
+    "p_value": 0.00036,
+    "n_obs": 3369,
+    "confirmed": true,
+    "note": null
+  },
+  {
+    "id": "H5",
+    "label": "Freshwater → Refugee outflow",
+    "exposure": "log_freshwater_percap",
+    "outcome": "log_refugee_outflow",
+    "beta": -0.929,
+    "p_value": 0.159,
+    "n_obs": 2288,
+    "confirmed": false,
+    "note": "Directional; data-limited (UNHCR 2000-2023)"
+  },
+  {
+    "id": "H6",
+    "label": "Safe water access → Inequality (Gini)",
+    "exposure": "safe_water_access_pct",
+    "outcome": "gini",
+    "beta": -0.1,
+    "p_value": 0.113,
+    "n_obs": 1520,
+    "confirmed": true,
+    "note": "Directionally confirmed; p=0.11"
+  },
+  {
+    "id": "H7",
+    "label": "Groundwater depletion → GDP trajectory",
+    "exposure": "grace_depletion_rate_cm_yr",
+    "outcome": "log_gdp_pc_ppp",
+    "beta": -0.03,
+    "p_value": 0.041,
+    "n_obs": 159,
+    "confirmed": true,
+    "note": "Conditional growth regression; fragility channel deferred"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "iso3": "LSO",
+  "country_name": "Lesotho",
+  "year": 2026,
+  "scarcity_score": 0.3187,
+  "instability_probability": 0.4605,
+  "migration_score": 0.415,
+  "compound_risk_score": 40.2,
+  "is_trained": true
+}

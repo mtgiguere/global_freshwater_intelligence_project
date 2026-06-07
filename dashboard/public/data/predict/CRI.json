@@ -1,0 +1,10 @@
+{
+  "iso3": "CRI",
+  "country_name": "Costa Rica",
+  "year": 2026,
+  "scarcity_score": 0.3572,
+  "instability_probability": 0.4339,
+  "migration_score": 0.415,
+  "compound_risk_score": 40.4,
+  "is_trained": true
+}

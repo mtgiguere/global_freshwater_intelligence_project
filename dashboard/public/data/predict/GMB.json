@@ -1,0 +1,10 @@
+{
+  "iso3": "GMB",
+  "country_name": "Gambia",
+  "year": 2026,
+  "scarcity_score": 0.3496,
+  "instability_probability": 0.4605,
+  "migration_score": 0.415,
+  "compound_risk_score": 41.1,
+  "is_trained": true
+}

@@ -1,0 +1,10 @@
+{
+  "iso3": "COL",
+  "country_name": "Colombia",
+  "year": 2026,
+  "scarcity_score": 0.3532,
+  "instability_probability": 0.271,
+  "migration_score": 0.415,
+  "compound_risk_score": 34.6,
+  "is_trained": true
+}

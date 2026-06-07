@@ -1,0 +1,10 @@
+{
+  "iso3": "PSE",
+  "country_name": "Palestine, State of",
+  "year": 2024,
+  "scarcity_score": 0.1346,
+  "instability_probability": 0.0394,
+  "migration_score": 0.118,
+  "compound_risk_score": 9.5,
+  "is_trained": true
+}

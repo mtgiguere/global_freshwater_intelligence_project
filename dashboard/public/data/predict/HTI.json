@@ -1,0 +1,10 @@
+{
+  "iso3": "HTI",
+  "country_name": "Haiti",
+  "year": 2026,
+  "scarcity_score": 0.3358,
+  "instability_probability": 0.271,
+  "migration_score": 0.415,
+  "compound_risk_score": 34.1,
+  "is_trained": true
+}

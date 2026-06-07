@@ -1,0 +1,10 @@
+{
+  "iso3": "CIV",
+  "country_name": "Côte d'Ivoire",
+  "year": 2026,
+  "scarcity_score": 0.3358,
+  "instability_probability": 0.4605,
+  "migration_score": 0.415,
+  "compound_risk_score": 40.7,
+  "is_trained": true
+}

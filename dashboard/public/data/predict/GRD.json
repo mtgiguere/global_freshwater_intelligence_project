@@ -1,0 +1,10 @@
+{
+  "iso3": "GRD",
+  "country_name": "Grenada",
+  "year": 2026,
+  "scarcity_score": 0.355,
+  "instability_probability": 0.4497,
+  "migration_score": 0.415,
+  "compound_risk_score": 40.9,
+  "is_trained": true
+}

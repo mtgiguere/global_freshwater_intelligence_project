@@ -1,0 +1,618 @@
+{
+  "iso3": "YEM",
+  "country_name": "Yemen",
+  "timeseries": [
+    {
+      "year": 1948,
+      "renewable_freshwater_percap": null,
+      "gdp_pc_ppp": null,
+      "life_expectancy": null,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1960,
+      "renewable_freshwater_percap": null,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 33.462,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1961,
+      "renewable_freshwater_percap": 371.337550784831,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 34.058,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1962,
+      "renewable_freshwater_percap": 363.182244331374,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 33.669,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1963,
+      "renewable_freshwater_percap": 355.261722156574,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 33.431,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1964,
+      "renewable_freshwater_percap": 347.221877756074,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 34.907,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1965,
+      "renewable_freshwater_percap": 338.950605696662,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 35.592,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1966,
+      "renewable_freshwater_percap": 330.630872043648,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 36.264,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1967,
+      "renewable_freshwater_percap": 322.26165067942,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 37.079,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1968,
+      "renewable_freshwater_percap": 313.876760624429,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 37.99,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1969,
+      "renewable_freshwater_percap": 305.416385065488,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 39.61,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1970,
+      "renewable_freshwater_percap": 297.228177401062,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 40.573,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1971,
+      "renewable_freshwater_percap": 289.357353851801,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 41.757,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1972,
+      "renewable_freshwater_percap": 281.498774542001,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 42.688,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1973,
+      "renewable_freshwater_percap": 273.694230890538,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 43.603,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1974,
+      "renewable_freshwater_percap": 265.931075983727,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 44.541,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1975,
+      "renewable_freshwater_percap": 258.1883196096,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 45.475,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1976,
+      "renewable_freshwater_percap": 250.473723338414,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 46.441,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1977,
+      "renewable_freshwater_percap": 242.824478835072,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 47.442,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1978,
+      "renewable_freshwater_percap": 235.252312586245,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 48.484,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1979,
+      "renewable_freshwater_percap": 227.66216755632,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 49.531,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1980,
+      "renewable_freshwater_percap": 220.04833099628,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 50.608,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1981,
+      "renewable_freshwater_percap": 212.499805208512,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 51.679,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1982,
+      "renewable_freshwater_percap": 205.057979655514,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 52.367,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1983,
+      "renewable_freshwater_percap": 197.712206158472,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 53.618,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1984,
+      "renewable_freshwater_percap": 190.465876813745,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 54.586,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1985,
+      "renewable_freshwater_percap": 183.344865143304,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 55.418,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1986,
+      "renewable_freshwater_percap": 176.455166943393,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 54.002,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1987,
+      "renewable_freshwater_percap": 169.766769561497,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 56.828,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1988,
+      "renewable_freshwater_percap": 163.300753018653,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 57.43,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1989,
+      "renewable_freshwater_percap": 157.136535336939,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 58.025,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1990,
+      "renewable_freshwater_percap": 151.211179949801,
+      "gdp_pc_ppp": 1722.22439411789,
+      "life_expectancy": 58.528,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1991,
+      "renewable_freshwater_percap": 145.528118423298,
+      "gdp_pc_ppp": 1761.81146099568,
+      "life_expectancy": 58.805,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1992,
+      "renewable_freshwater_percap": 140.098124726558,
+      "gdp_pc_ppp": 1835.28111559428,
+      "life_expectancy": 59.26,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1993,
+      "renewable_freshwater_percap": 134.927499599394,
+      "gdp_pc_ppp": 1838.28268593285,
+      "life_expectancy": 59.655,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1994,
+      "renewable_freshwater_percap": 130.037828004166,
+      "gdp_pc_ppp": 1890.75509687978,
+      "life_expectancy": 59.828,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1995,
+      "renewable_freshwater_percap": 125.447594028647,
+      "gdp_pc_ppp": 1927.42298079078,
+      "life_expectancy": 60.532,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1996,
+      "renewable_freshwater_percap": 121.29489578949,
+      "gdp_pc_ppp": 1949.99754744654,
+      "life_expectancy": 60.884,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1997,
+      "renewable_freshwater_percap": 117.489510984038,
+      "gdp_pc_ppp": 1987.6265785116,
+      "life_expectancy": 61.34,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1998,
+      "renewable_freshwater_percap": 113.845739998123,
+      "gdp_pc_ppp": 2041.67107777046,
+      "life_expectancy": 61.788,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 1999,
+      "renewable_freshwater_percap": 110.355439104292,
+      "gdp_pc_ppp": 2053.79786274001,
+      "life_expectancy": 62.275,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2000,
+      "renewable_freshwater_percap": 107.011053375534,
+      "gdp_pc_ppp": 2114.67265566851,
+      "life_expectancy": 62.761,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2001,
+      "renewable_freshwater_percap": 103.826003044475,
+      "gdp_pc_ppp": 2129.77268762778,
+      "life_expectancy": 63.286,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2002,
+      "renewable_freshwater_percap": 100.791520610954,
+      "gdp_pc_ppp": 2148.88860494788,
+      "life_expectancy": 63.807,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2003,
+      "renewable_freshwater_percap": 97.8729915238727,
+      "gdp_pc_ppp": 2164.86083019467,
+      "life_expectancy": 64.407,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2004,
+      "renewable_freshwater_percap": 95.043409266832,
+      "gdp_pc_ppp": 2185.78999159086,
+      "life_expectancy": 64.881,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2005,
+      "renewable_freshwater_percap": 92.1453342539091,
+      "gdp_pc_ppp": 2237.63762643152,
+      "life_expectancy": 65.356,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2006,
+      "renewable_freshwater_percap": 89.1981734083,
+      "gdp_pc_ppp": 2234.74266863312,
+      "life_expectancy": 65.8,
+      "fsi_score": 96.6,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2007,
+      "renewable_freshwater_percap": 86.3554946479743,
+      "gdp_pc_ppp": 2235.75075901067,
+      "life_expectancy": 66.23,
+      "fsi_score": 93.2,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2008,
+      "renewable_freshwater_percap": 83.6255548704897,
+      "gdp_pc_ppp": 2244.04491655237,
+      "life_expectancy": 66.609,
+      "fsi_score": 95.4,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2009,
+      "renewable_freshwater_percap": 80.9943826924415,
+      "gdp_pc_ppp": 2257.46902086832,
+      "life_expectancy": 66.905,
+      "fsi_score": 98.1,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2010,
+      "renewable_freshwater_percap": 78.4918002419566,
+      "gdp_pc_ppp": 2356.19960422096,
+      "life_expectancy": 67.223,
+      "fsi_score": 100.0,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2011,
+      "renewable_freshwater_percap": 76.1341348590034,
+      "gdp_pc_ppp": 1994.83663337222,
+      "life_expectancy": 67.412,
+      "fsi_score": 100.3,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2012,
+      "renewable_freshwater_percap": 73.8561606254731,
+      "gdp_pc_ppp": 1981.45800046603,
+      "life_expectancy": 67.569,
+      "fsi_score": 104.8,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2013,
+      "renewable_freshwater_percap": 71.6406863423377,
+      "gdp_pc_ppp": 2014.7289059487,
+      "life_expectancy": 67.961,
+      "fsi_score": 107.0,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2014,
+      "renewable_freshwater_percap": 69.4758992902508,
+      "gdp_pc_ppp": 1950.1625450589,
+      "life_expectancy": 68.003,
+      "fsi_score": 105.4,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2015,
+      "renewable_freshwater_percap": 67.3954381440015,
+      "gdp_pc_ppp": 1362.1738120601,
+      "life_expectancy": 66.761,
+      "fsi_score": 108.2,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2016,
+      "renewable_freshwater_percap": 65.4022033067977,
+      "gdp_pc_ppp": 1197.95865971172,
+      "life_expectancy": 67.105,
+      "fsi_score": 111.5,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2017,
+      "renewable_freshwater_percap": 63.4615156223666,
+      "gdp_pc_ppp": 1103.45634849842,
+      "life_expectancy": 67.12,
+      "fsi_score": 111.1,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2018,
+      "renewable_freshwater_percap": 61.6103502102468,
+      "gdp_pc_ppp": 1079.32938366255,
+      "life_expectancy": 65.915,
+      "fsi_score": 112.6715037597987,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2019,
+      "renewable_freshwater_percap": 59.8096208502946,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 66.567,
+      "fsi_score": 113.5,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2020,
+      "renewable_freshwater_percap": 58.1156209171182,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 66.435,
+      "fsi_score": 112.43869382016284,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2021,
+      "renewable_freshwater_percap": 56.5424608302103,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 66.019,
+      "fsi_score": 111.7,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2022,
+      "renewable_freshwater_percap": 54.9409207198328,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 67.952,
+      "fsi_score": 111.7,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2023,
+      "renewable_freshwater_percap": null,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 69.295,
+      "fsi_score": 108.9,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2024,
+      "renewable_freshwater_percap": null,
+      "gdp_pc_ppp": null,
+      "life_expectancy": 69.439,
+      "fsi_score": null,
+      "ucdp_conflict_binary": 1,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2025,
+      "renewable_freshwater_percap": null,
+      "gdp_pc_ppp": null,
+      "life_expectancy": null,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    },
+    {
+      "year": 2026,
+      "renewable_freshwater_percap": null,
+      "gdp_pc_ppp": null,
+      "life_expectancy": null,
+      "fsi_score": null,
+      "ucdp_conflict_binary": null,
+      "compound_risk_score": null
+    }
+  ]
+}

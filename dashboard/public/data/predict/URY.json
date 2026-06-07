@@ -1,0 +1,10 @@
+{
+  "iso3": "URY",
+  "country_name": "Uruguay",
+  "year": 2026,
+  "scarcity_score": 0.3624,
+  "instability_probability": 0.4339,
+  "migration_score": 0.415,
+  "compound_risk_score": 40.6,
+  "is_trained": true
+}
