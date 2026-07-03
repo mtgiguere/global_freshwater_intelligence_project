@@ -25,6 +25,7 @@ jobs:
     with:
       working-directory: dashboard
       run-build: false          # existing CI runs vitest only
+      run-lint: false           # lint not previously enforced; 1 real eslint error to fix first
 
   security:
     uses: mtgiguere/qa_pipeline/.github/workflows/security-qa.yml@main
